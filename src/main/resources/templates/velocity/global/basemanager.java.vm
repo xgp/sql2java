@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.sql.DataSource;
 import java.text.SimpleDateFormat;
@@ -67,9 +68,9 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Loads all the rows from table.
      *
-     * @return an array of beans
+     * @return a List of beans
      */
-    public T[] loadAll() throws SQLException {
+    public List<T> loadAll() throws SQLException {
         return loadUsingTemplate(null);
     }
 
@@ -78,36 +79,36 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      *
      * @param startRow the start row to be used (first row = 1, last row = -1)
      * @param numRows the number of rows to be retrieved (all rows = a negative number)
-     * @return an array of beans
+     * @return a List of beans
      */
-    public T[] loadAll(int startRow, int numRows) throws SQLException {
+    public List<T> loadAll(int startRow, int numRows) throws SQLException {
         return loadUsingTemplate(null, startRow, numRows);
     }
 
     /**
-     * Retrieves an array of beans given a sql 'where' clause.
+     * Retrieves a List of beans given a sql 'where' clause.
      *
      * @param where the sql 'where' clause
      * @return the resulting bean
      */
-    public T[] loadByWhere(String where) throws SQLException {
+    public List<T> loadByWhere(String where) throws SQLException {
         return loadByWhere(where, null);
     }
 
     /**
-     * Retrieves an array of beans given a sql where clause, and a list of fields.
+     * Retrieves a List of beans given a sql where clause, and a list of fields.
      * It is up to you to pass the 'WHERE' in your where clausis.
      *
      * @param where the sql 'WHERE' clause
      * @param fieldList array of field's ID
      * @return the resulting beans
      */
-    public T[] loadByWhere(String where, int[] fieldList) throws SQLException {
+    public List<T> loadByWhere(String where, int[] fieldList) throws SQLException {
         return loadByWhere(where, fieldList, 1, -1);
     }
 
     /**
-     * Retrieves an array of $beanClass given a sql where clause and a list of fields, and startRow and numRows.
+     * Retrieves a List of $beanClass given a sql where clause and a list of fields, and startRow and numRows.
      * It is up to you to pass the 'WHERE' in your where clausis.
      *
      * @param where the sql 'where' clause
@@ -116,7 +117,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @param fieldList table of the field's associated constants
      * @return the resulting $beanClass table
      * /
-    public abstract T[] loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException;
+    public abstract List<T> loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException;
 
     /**
      * Retrieves the unique object given a sql 'where' clause.
@@ -125,9 +126,9 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @return The resulting bean
      */
     public T loadUniqueByWhere(String where) throws SQLException {
-        T[] os = loadByWhere(where);
-        if (os != null && os.length > 0) {
-            return os[0];
+        List<T> os = loadByWhere(where);
+        if (os != null && os.size() > 0) {
+            return os.get(0);
 	} else {
 	    return null;
         }
@@ -199,35 +200,35 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     public abstract T update(T bean) throws SQLException;
 
     /**
-     * Saves an array of beans into the database.
+     * Saves a List of beans into the database.
      *
      * @param beans to be saved
-     * @return the saved bean array.
+     * @return the saved bean List.
      */
-    public T[] save(T[] beans) throws SQLException {
-        for (int iIndex = 0; iIndex < beans.length; iIndex ++) {
-            save(beans[iIndex]);
+    public List<T> save(List<T> beans) throws SQLException {
+        for (T bean:beans) {
+            save(bean);
         }
         return beans;
     }
 
     /**
-     * Insert an array of beans into the database.
+     * Insert a List of beans into the database.
      *
      * @param beans to be inserted
-     * @return the saved bean array.
+     * @return the saved bean List.
      */
-    public T[] insert(T[] beans) throws SQLException {
+    public List<T> insert(List<T> beans) throws SQLException {
         return save(beans);
     }
 
     /**
-     * Updates an array of beans into the database.
+     * Updates an List of beans into the database.
      *
      * @param beans to be inserted
-     * @return the saved bean array.
+     * @return the saved bean List.
      */
-    public T[] update(T[] beans) throws SQLException {
+    public List<T> update(List<T> beans) throws SQLException {
         return save(beans);
     }
 
@@ -238,38 +239,38 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @return the bean matching the template
      */
     public T loadUniqueUsingTemplate(T bean) throws SQLException {
-         T[] beans = loadUsingTemplate(bean);
-         if (beans.length == 0)
+         List<T> beans = loadUsingTemplate(bean);
+         if (beans.size() == 0)
              return null;
-         if (beans.length > 1)
+         if (beans.size() > 1)
              throw new SQLException("More than one element !!");
-         return beans[0];
+         return beans.get(0);
     }
 
     /**
-     * Loads an array of from a template one.
+     * Loads a List of from a template one.
      *
      * @param bean the template to look for
      * @return all the matching the template
      */
-    public T[] loadUsingTemplate(T bean) throws SQLException {
+    public List<T> loadUsingTemplate(T bean) throws SQLException {
         return loadUsingTemplate(bean, 1, -1);
     }
 
     /**
-     * Loads an array of from a template one, given the start row and number of rows.
+     * Loads a List of from a template one, given the start row and number of rows.
      *
      * @param bean the template to look for
      * @param startRow the start row to be used (first row = 1, last row=-1)
      * @param numRows the number of rows to be retrieved (all rows = a negative number)
      * @return all the matching the template
      */
-    public T[] loadUsingTemplate(T bean, int startRow, int numRows) throws SQLException {
+    public List<T> loadUsingTemplate(T bean, int startRow, int numRows) throws SQLException {
         return loadUsingTemplate(bean, startRow, numRows, SEARCH_EXACT);
     }
 
     /**
-     * Loads an array of beans from a template one, given the start row and number of rows.
+     * Loads a List of beans from a template one, given the start row and number of rows.
      *
      * @param bean the bean template to look for
      * @param startRow the start row to be used (first row = 1, last row=-1)
@@ -277,7 +278,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @param searchType exact ?  like ? starting like ?
      * @return all the beans matching the template
      */
-    public abstract T[] loadUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
+    public abstract List<T> loadUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
 
     /**
      * Deletes rows using a bean template.
@@ -339,28 +340,26 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     public abstract int countUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
 
     /**
-     * Decode a ResultSet in an array of objects
+     * Decode a ResultSet in a List of objects
      *
      * @param rs the resultset to decode
      * @param fieldList table of the field's associated constants
      * @param startRow the start row to be used (first row = 1, last row = -1)
      * @param numRows the number of rows to be retrieved (all rows = a negative number)
-     * @return the resulting bean array
+     * @return the resulting bean List
      */
-    public T[] decodeResultSet(ResultSet rs, int[] fieldList, int startRow, int numRows) throws SQLException {
-        java.util.List v = new java.util.ArrayList();
+    public List<T> decodeResultSet(ResultSet rs, int[] fieldList, int startRow, int numRows) throws SQLException {
+        List<T> v = new ArrayList();
         int count = 0;
         try {
             if (rs.absolute(startRow) && numRows!=0) {
                 do {
-                    if(fieldList == null)
-                        v.add(decodeRow(rs));
-                    else
-                        v.add(decodeRow(rs, fieldList));
+                    if(fieldList == null) v.add(decodeRow(rs));
+                    else v.add(decodeRow(rs, fieldList));
                     count++;
                 } while ( (count<numRows||numRows<0) && rs.next() );
             }
-            return (T[])v.toArray();
+            return Collections.unmodifiableList(v);
         } finally {
             if (v != null) { v.clear(); v = null;}
         }
@@ -395,9 +394,9 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * Loads all the elements using a prepared statement.
      *
      * @param ps the PreparedStatement to be used
-     * @return an array of beans
+     * @return a List of beans
      */
-    public T[] loadByPreparedStatement(PreparedStatement ps) throws SQLException {
+    public List<T> loadByPreparedStatement(PreparedStatement ps) throws SQLException {
         return loadByPreparedStatement(ps, null);
     }
 
@@ -406,9 +405,9 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      *
      * @param ps the PreparedStatement to be used
      * @param fieldList table of the field's associated constants
-     * @return an array of beans
+     * @return a List of beans
      */
-    public T[] loadByPreparedStatement(PreparedStatement ps, int[] fieldList) throws SQLException {
+    public List<T> loadByPreparedStatement(PreparedStatement ps, int[] fieldList) throws SQLException {
         return loadByPreparedStatement(ps, fieldList, 1, -1);
     }
 
@@ -420,9 +419,9 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @param startRow the start row to be used (first row = 1, last row = -1)
      * @param numRows the number of rows to be retrieved (all rows = a negative number)
      * @param fieldList table of the field's associated constants
-     * @return an array of beans
+     * @return a List of beans
      */
-    public T[] loadByPreparedStatement(PreparedStatement ps, int[] fieldList, int startRow, int numRows) throws SQLException {
+    public List<T> loadByPreparedStatement(PreparedStatement ps, int[] fieldList, int startRow, int numRows) throws SQLException {
         ResultSet rs =  null;
         try {
             rs = ps.executeQuery();

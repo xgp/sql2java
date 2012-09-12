@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.List;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,11 +148,11 @@ public class $managerClass extends BaseManager<$beanClass>
 #foreach( $pk in $primaryKeys )
             $pk.getPreparedStatementMethod($strUtil.getVarName($pk), $velocityCount)
 #end
-            $beanClass pReturn[] = loadByPreparedStatement(ps);
-            if (pReturn.length < 1)
+            List<$beanClass> pReturn = loadByPreparedStatement(ps);
+            if (pReturn.size() < 1)
                 return null;
             else
-                return pReturn[0];
+                return pReturn.get(0);
         }
         finally
         {
@@ -247,7 +248,7 @@ public class $managerClass extends BaseManager<$beanClass>
     // SQL 'WHERE' METHOD
     //////////////////////////////////////
     /**
-     * Retrieves an array of $beanClass given a sql where clause and a list of fields, and startRow and numRows.
+     * Retrieves a List of $beanClass given a sql where clause and a list of fields, and startRow and numRows.
      * It is up to you to pass the 'WHERE' in your where clausis.
      *
      * @param where the sql 'where' clause
@@ -257,7 +258,7 @@ public class $managerClass extends BaseManager<$beanClass>
      * @return the resulting $beanClass table
      */
     //9
-    public $beanClass[] loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException
+    public List<$beanClass> loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException
     {
         String sql = null;
         if(fieldList == null)
@@ -593,15 +594,13 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
     }
 
 
-
-
     //_____________________________________________________________________
     //
     // USING TEMPLATE
     //_____________________________________________________________________
 
     /**
-     * Loads an array of $beanClass from a template one, given the start row and number of rows.
+     * Loads a List of $beanClass from a template one, given the start row and number of rows.
      *
      * @param bean the $beanClass template to look for
      * @param startRow the start row to be used (first row = 1, last row=-1)
@@ -610,7 +609,7 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
      * @return all the $beanClass matching the template
      */
     //20
-    public $beanClass[] loadUsingTemplate($beanClass bean, int startRow, int numRows, int searchType) throws SQLException
+    public List<$beanClass> loadUsingTemplate($beanClass bean, int startRow, int numRows, int searchType) throws SQLException
     {
         if (log.isTraceEnabled()) log.trace("loadUsingTemplate startRow:" + startRow + ", numRows:" + numRows + ", searchType:" + searchType);
         Connection c = null;

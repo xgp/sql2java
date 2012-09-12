@@ -4,6 +4,7 @@ $codewriter.setCurrentJavaFilename($pkg, "CachingManager.java")
 package $pkg;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,16 +73,16 @@ public class CachingManager<T>
      * @param where The WHERE clause.
      * @return The bean or null.
      */
-    public T[] get(String where)
+    public List<T> get(String where)
     {
 	CacheEntry entry = (CacheEntry)cache.get(where);
-	if (entry != null && entry.valid()) return (T[])entry.getBean();
+	if (entry != null && entry.valid()) return (List<T>)entry.getBean();
 	try {
-	    Object[] o = manager.loadByWhere(where);
+	    List<T> o = manager.loadByWhere(where);
 	    if (o != null) {
 		logger.trace("CACHE PUT: "+where);
 		cache.put(where, new CacheEntry(where, o, expiration));
-		return (T[])o;
+		return o;
 	    }
 	} catch (Exception e) {
 	    logger.error("Error loading bean from cache: ", e);
