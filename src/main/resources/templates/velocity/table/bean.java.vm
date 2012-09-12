@@ -1,0 +1,247 @@
+##$Id: bean.java.vm,v 1.8 2005/10/17 09:09:59 framiere Exp $
+#parse( "header.include.vm" )
+#parse( "table.variables.include.vm" )
+$codewriter.setCurrentJavaFilename("$table.getPackage()", "${beanClass}.java")
+package $table.getPackage();
+
+import $pkg.*;
+
+import java.io.Serializable;
+import java.util.Map;
+import java.util.HashMap;
+
+/**
+ * $beanClass is a mapping of $table.getName() Table.
+#if ( $table.getRemarks().length() > 0 )
+ * <br>Meta Data Information (in progress):
+ * <ul>
+ *    <li>comments: $table.getRemarks() </li>
+ * </ul>
+#end
+*/
+public class $beanClass
+#if ($extendsClass)
+    extends $extendsClass
+#end
+    implements Serializable
+#if ($implementsClasses)
+    #foreach( $implements in $implementsClasses )$implements#end
+#end
+{
+#foreach ( $column in $columns )
+#set( $columnfield = $strUtil.getVarName($column))
+
+    private $column.getJavaType() $strUtil.getVarName($column);
+    private boolean $strUtil.getModifiedVarName( $column ) = false;
+    private boolean $strUtil.getInitializedVarName( $column ) = false;
+
+#end
+    private boolean _isNew = true;
+
+    /**
+     * Do not use this constructor directly, please use the factory method
+     * available in the associated manager.
+     */
+    $beanClass()
+    {
+    }
+
+#foreach ($column in $columns)
+    /**
+     * Getter method for $strUtil.getVarName($column).
+     * <br>
+#if ( $column.isPrimaryKey() )
+     * PRIMARY KEY.<br>
+#end
+     * Meta Data Information (in progress):
+     * <ul>
+     * <li>full name: $column.getFullName()
+#if ( $column.getPointsTo() )
+     * <li> foreign key: ${column.PointsTo.TableName}.${column.PointsTo.getName()}
+#end
+#if ( $column.getRemarks().length() > 0 )
+     * <li>comments: $column.getRemarks()
+#end
+#if ( $column.DefaultValue.length() > 0 )
+     * <li>default value: $column.DefaultValue
+#end
+     * <li>column size: $column.getSize()
+     * <li>jdbc type returned by the driver: $column.getJavaTypeAsTypeName()
+     * </ul>
+     *
+     * @return the value of $strUtil.getVarName($column)
+     */
+    public $column.getJavaType() $strUtil.getGetMethod($column)()
+    {
+        return $strUtil.getVarName($column);
+    }
+
+    /**
+     * Setter method for $strUtil.getVarName($column).
+     * <br>
+#if ( $column.hasCompareTo() )
+     * The new value is set only if compareTo() says it is different,
+     * or if one of either the new value or the current value is null.
+     * In case the new value is different, it is set and the field is marked as 'modified'.
+#else
+     * Attention, there will be no comparison with current value which
+     * means calling this method will mark the field as 'modified' in all cases.
+#end
+     *
+     * @param newVal the new value to be assigned to $strUtil.getVarName($column)
+     */
+    public void ${strUtil.getSetMethod($column)}($column.getJavaType() newVal)
+    {
+#if ($column.hasCompareTo())
+        if ((newVal != null && this.$strUtil.getVarName($column) != null && (newVal.compareTo(this.$strUtil.getVarName($column)) == 0)) ||
+            (newVal == null && this.$strUtil.getVarName($column) == null && $strUtil.getInitializedVarName($column))) {
+            return;
+        }
+#elseif ( $column.useEqualsInSetter() )
+        if ((newVal != null && this.$strUtil.getVarName($column) != null && newVal.equals(this.$strUtil.getVarName($column))) ||
+            (newVal == null && this.$strUtil.getVarName($column) == null && $strUtil.getInitializedVarName($column))) {
+            return;
+        }
+#end
+        this.$strUtil.getVarName($column) = newVal;
+        $strUtil.getModifiedVarName($column) = true;
+        $strUtil.getInitializedVarName($column) = true;
+    }
+
+#if ( $strUtil.hasPrimaryType($column) )
+    /**
+     * Setter method for $strUtil.getVarName($column).
+     * <br>
+     * Convenient for those who do not want to deal with Objects for primary types.
+     *
+     * @param newVal the new value to be assigned to $strUtil.getVarName($column)
+     */
+    public void $strUtil.getSetMethod($column)($strUtil.getJavaPrimaryType($column) newVal)
+    {
+        $strUtil.getSetMethod($column)(new $column.getJavaType()(newVal));
+    }
+
+#end
+    /**
+     * Determines if the $strUtil.getVarName($column) has been modified.
+     *
+     * @return true if the field has been modified, false if the field has not been modified
+     */
+    public boolean $strUtil.getModifiedMethod($column)()
+    {
+        return $strUtil.getModifiedVarName($column);
+    }
+
+    /**
+     * Determines if the $strUtil.getVarName($column) has been initialized.
+     * <br>
+     * It is useful to determine if a field is null on purpose or just because it has not been initialized.
+     *
+     * @return true if the field has been initialized, false otherwise
+     */
+    public boolean $strUtil.getInitializedMethod($column)()
+    {
+        return $strUtil.getInitializedVarName($column);
+    }
+
+#end
+    /**
+     * Determines if the current object is new.
+     *
+     * @return true if the current object is new, false if the object is not new
+     */
+    public boolean isNew()
+    {
+        return _isNew;
+    }
+
+    /**
+     * Specifies to the object if it has been set as new.
+     *
+     * @param isNew the boolean value to be assigned to the isNew field
+     */
+    public void isNew(boolean isNew)
+    {
+        this._isNew = isNew;
+    }
+
+    /**
+     * Determines if the object has been modified since the last time this method was called.
+     * <br>
+     * We can also determine if this object has ever been modified since its creation.
+     *
+     * @return true if the object has been modified, false if the object has not been modified
+     */
+    public boolean isModified()
+    {
+        return #foreach ( $column in $columns )#if ( $velocityCount == 1 )$strUtil.getModifiedVarName($column)#else ||
+		$strUtil.getModifiedVarName($column)#end#end;
+    }
+
+    /**
+     * Resets the object modification status to 'not modified'.
+     */
+    public void resetIsModified()
+    {
+#foreach ( $column in $columns )
+        $strUtil.getModifiedVarName($column) = false;
+#end
+    }
+
+    /**
+     * Copies the passed bean into the current bean.
+     *
+     * @param bean the bean to copy into the current bean
+     */
+    public void copy($beanClass bean)
+    {
+#foreach ( $column in $columns )
+        $strUtil.getSetMethod($column)(bean.$strUtil.getGetMethod($column)());
+#end
+    }
+
+    /**
+     * Returns the object string representation.
+     *
+     * @return the object as a string
+     */
+    public String toString()
+    {
+        return   "\n[$tablename] "
+#foreach ( $column in $columns )
+                 + "\n - $column.getFullName() = " + ($strUtil.getInitializedVarName($column) ? ("[" + ($strUtil.getVarName($column) == null ? null : ${strUtil.getVarName($column)}.toString()) + "]") : "not initialized") + ""
+#end
+            ;
+    }
+
+    /**
+     * return a dictionary of the object
+     */
+    public Map getDictionary()
+    {
+        Map dictionary = new HashMap();
+#foreach ( $column in $columns )
+        dictionary.put("$column.getName().toLowerCase()", $strUtil.getGetMethod($column)() == null ? "" : ${strUtil.getGetMethod($column)}().toString());
+#end
+        return dictionary;
+    }
+
+    /**
+     * return a dictionary of the pk columns
+#if ( $table.countPrimaryKeys() == 0)
+     * no primary key, the regular dictionary is returned
+#end
+     */
+    public Map getPkDictionary()
+    {
+#if ( $table.countPrimaryKeys() == 0)
+        return getDictionary();
+#else
+        Map dictionary = new HashMap();
+#foreach ( $column in $primaryKeys )
+        dictionary.put("$column.getName().toLowerCase()", $strUtil.getGetMethod($column)() == null ? "" : ${strUtil.getGetMethod($column)}().toString());
+#end
+        return dictionary;
+#end
+    }
+}

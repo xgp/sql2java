@@ -1,0 +1,113 @@
+##$Id: global.manager.java.vm,v 1.3 2005/10/10 20:11:46 framiere Exp $
+#parse( "header.include.vm" )
+$codewriter.setCurrentJavaFilename($pkg, "CachingManager.java")
+package $pkg;
+
+import java.util.HashMap;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Simple primary key caching manager for sql2java generated managers.
+ * This provides a simple read through cache for (mostly) read-only data
+ * sources. It wraps the loadByPrimaryKey and loadByWhere methods of the
+ * underlying sql2java managers, and uses the method parameters as the key.
+ * This also supports a simple expiry mechanism.
+ */
+public class CachingManager<T>
+{
+    private static final Logger logger = LoggerFactory.getLogger(CachingManager.class);
+
+    private static final long DEFAULT_EXPIRE = 3600000l; //1 hour
+
+    public CachingManager(DaoManager manager)
+    {
+	this.manager = manager;
+	this.cache = new HashMap();
+	this.expiration = DEFAULT_EXPIRE;
+    }
+
+    public CachingManager(DaoManager manager, Map cache)
+    {
+	this.manager = manager;
+	this.cache = cache;
+	this.expiration = DEFAULT_EXPIRE;
+    }
+
+    public CachingManager(DaoManager manager, Map cache, long expiration)
+    {
+	this.manager = manager;
+	this.cache = cache;
+	this.expiration = expiration;
+    }
+
+    private DaoManager manager;
+    private Map cache;
+    private long expiration;
+
+    /**
+     * Retrieves the bean via primary key.
+     * @param primaryKey The Integer primary key.
+     * @return The bean or null.
+     */
+    public T get(Integer primaryKey)
+    {
+	CacheEntry entry = (CacheEntry)cache.get(primaryKey);
+	if (entry != null && entry.valid()) return (T)entry.getBean();
+	try {
+	    Object o = manager.loadByPrimaryKey(primaryKey);
+	    if (o != null) {
+		cache.put(primaryKey, new CacheEntry(primaryKey, o, expiration));
+		return (T)o;
+	    }
+	} catch (Exception e) {
+	    logger.error("Error loading bean from cache: ", e);
+	}
+	return null;
+    }
+
+    /**
+     * Retrieves the bean via primary key.
+     * @param where The WHERE clause.
+     * @return The bean or null.
+     */
+    public T[] get(String where)
+    {
+	CacheEntry entry = (CacheEntry)cache.get(where);
+	if (entry != null && entry.valid()) return (T[])entry.getBean();
+	try {
+	    Object[] o = manager.loadByWhere(where);
+	    if (o != null) {
+		logger.trace("CACHE PUT: "+where);
+		cache.put(where, new CacheEntry(where, o, expiration));
+		return (T[])o;
+	    }
+	} catch (Exception e) {
+	    logger.error("Error loading bean from cache: ", e);
+	}
+	return null;
+    }
+
+    private class CacheEntry {
+
+	public CacheEntry(Object key, Object value, long expiration) {
+	    this.key = key;
+	    this.value = value;
+	    this.loaded = System.currentTimeMillis();
+	    this.expiration = expiration;
+	}
+
+	private Object key;
+	private Object value;
+	public Object getBean() { return this.value; }
+	private long loaded;
+	private long expiration;
+
+	public boolean valid()
+	{
+	    return System.currentTimeMillis()-loaded < expiration;
+	}
+    }
+
+}

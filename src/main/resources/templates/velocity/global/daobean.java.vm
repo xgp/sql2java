@@ -1,0 +1,15 @@
+##$Id: generated.bean.java.vm,v 1.1 2005/10/12 12:37:58 framiere Exp $
+#parse( "header.include.vm" )
+$codewriter.setCurrentJavaFilename($pkg, "DaoBean.java")
+package $pkg;
+
+import java.util.Map;
+
+public interface DaoBean
+{
+    public boolean isNew();
+    public boolean isModified();
+    public void resetIsModified();
+    public Map getDictionnary();
+    public Map getPkDictionnary();
+}

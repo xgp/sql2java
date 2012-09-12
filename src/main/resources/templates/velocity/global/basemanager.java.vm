@@ -1,0 +1,570 @@
+##$Id: global.manager.java.vm,v 1.3 2005/10/10 20:11:46 framiere Exp $
+#parse( "header.include.vm" )
+$codewriter.setCurrentJavaFilename($pkg, "BaseManager.java")
+package $pkg;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import javax.sql.DataSource;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Base data access manager.
+ */
+public abstract class BaseManager<T> implements DaoManager<T>
+{
+    private static final Logger logger = LoggerFactory.getLogger(BaseManager.class);
+
+    protected BaseManager(DataSource dataSource) {
+	this.dataSource = dataSource;
+    }
+
+    protected DataSource dataSource;
+
+    /**
+     * Loads an object from the table using its key field.
+     *
+     * @return a unique object
+     */
+    public T loadByPrimaryKey(Integer primaryKey) throws SQLException {
+	throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Retrieves an array of objects given a sql 'where' clause.
+     *
+     * @param where The sql 'where' clause
+     * @return the Resulting object array
+     */
+    public abstract T[] loadByWhere(String where) throws SQLException;
+
+    /**
+     * Retrieves the unique object given a sql 'where' clause.
+     *
+     * @param where The sql 'where' clause
+     * @return The resulting object
+     */
+    public T loadUniqueByWhere(String where) throws SQLException {
+        T[] os = loadByWhere(where);
+        if (os != null && os.length > 0) {
+            return os[0];
+	} else {
+	    return null;
+        }
+    }
+
+    // public T createBean();
+    // public int deleteByPrimaryKey(Integer id) throws SQLException;
+    // public T[] loadAll() throws SQLException;
+    // public T[] loadAll(int startRow, int numRows) throws SQLException;
+    // public T[] loadByWhere(String where, int[] fieldList) throws SQLException;
+    // public T[] loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException;
+    // public int deleteAll() throws SQLException;
+    // public int deleteByWhere(String where) throws SQLException;
+    // public T save(T bean) throws SQLException;
+    // public T insert(T bean) throws SQLException;
+    // public T insert(T bean, boolean orUpdate) throws SQLException;
+    // public T insert(T bean, boolean orUpdate, boolean delayed) throws SQLException;
+    // public T update(T bean) throws SQLException;
+    // public T[] save(T[] beans) throws SQLException;
+    // public T[] insert(T[] beans) throws SQLException;
+    // public T[] update(T[] beans) throws SQLException;
+    // public T loadUniqueUsingTemplate(T bean) throws SQLException;
+    // public T[] loadUsingTemplate(T bean) throws SQLException;
+    // public T[] loadUsingTemplate(T bean, int startRow, int numRows) throws SQLException;
+    // public T[] loadUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
+    // public int deleteUsingTemplate(T bean) throws SQLException;
+    // public int countAll() throws SQLException;
+    // public int countWhere(String where) throws SQLException;
+    // public int countUsingTemplate(T bean) throws SQLException;
+    // public int countUsingTemplate(T bean, int startRow, int numRows) throws SQLException;
+    // public int countUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
+    // public T[] decodeResultSet(ResultSet rs, int[] fieldList, int startRow, int numRows) throws SQLException;
+    // public T decodeRow(ResultSet rs) throws SQLException;
+    // public T decodeRow(ResultSet rs, int[] fieldList) throws SQLException;
+    // public T metaDataDecodeRow(ResultSet rs) throws SQLException;
+    // public T[] loadByPreparedStatement(PreparedStatement ps) throws SQLException;
+    // public T[] loadByPreparedStatement(PreparedStatement ps, int[] fieldList) throws SQLException;
+    // public T[] loadByPreparedStatement(PreparedStatement ps, int[] fieldList, int startRow, int numRows) throws SQLException;
+
+    /**
+     * @return an auto commit connection
+     */
+    public Connection getConnection() throws SQLException
+    {
+	return dataSource.getConnection();
+    }
+
+    /**
+     * Releases the database connection.
+     */
+    public void releaseConnection(Connection c)
+    {
+	if (c != null) {
+	    try {
+		c.close();
+	    } catch (Exception e) {
+		logger.warn("Error releasing connection.", e);
+	    }
+	}
+    }
+
+    /**
+     * Logs a message using the underlying logwriter, if not null.
+     */
+     public void log(String message)
+     {
+	 if (logger.isTraceEnabled()) logger.trace(message);
+     }
+
+    /**
+     * Closes the passed Statement.
+     */
+    public void close(Statement s)
+    {
+        try
+        {
+            if (s != null)
+                s.close();
+        }
+        catch (SQLException x)
+        {
+            log("Could not close statement!: " + x.toString());
+        }
+    }
+
+    /**
+     * Closes the passed ResultSet.
+     */
+    public void close(ResultSet rs)
+    {
+        try
+        {
+            if (rs != null)
+                rs.close();
+        }
+        catch (SQLException x)
+        {
+            log("Could not close result set!: " + x.toString());
+        }
+    }
+
+    /**
+     * Closes the passed Statement and ResultSet.
+     */
+    public void close(Statement s, ResultSet rs)
+    {
+        close(rs);
+        close(s);
+    }
+
+    ////////////////////////////////////////////////////
+    // Helper methods for fetching numbers using IDs or names
+    ////////////////////////////////////////////////////
+
+    /**
+     * Retrieves an int value from the passed result set as an Integer object.
+     */
+    public static Integer getInteger(ResultSet rs, int pos) throws SQLException
+    {
+        int i = rs.getInt(pos);
+        return rs.wasNull() ? (Integer)null : new Integer(i);
+    }
+
+    /**
+     * Retrieves an int value from the passed result set as an Integer object.
+     */
+    public static Integer getInteger(ResultSet rs, String column) throws SQLException
+    {
+        int i = rs.getInt(column);
+        return rs.wasNull() ? (Integer)null : new Integer(i);
+    }
+
+    /**
+     * Set an Integer object to the passed prepared statement as an int or as null.
+     */
+    public static void setInteger(PreparedStatement ps, int pos, Integer i) throws SQLException
+    {
+        if (i==null)
+        {
+            ps.setNull(pos, Types.INTEGER);
+        }
+        else
+        {
+            ps.setInt(pos, i.intValue());
+        }
+    }
+
+    /**
+     * Retrieves a float value from the passed result set as a Float object.
+     */
+    public static Float getFloat(ResultSet rs, int pos) throws SQLException
+    {
+        float f = rs.getFloat(pos);
+        return rs.wasNull() ? (Float)null : new Float(f);
+    }
+
+    /**
+     * Retrieves a float value from the passed result set as a Float object.
+     */
+    public static Float getFloat(ResultSet rs, String column) throws SQLException
+    {
+        float f = rs.getFloat(column);
+        return rs.wasNull() ? (Float)null : new Float(f);
+    }
+
+    /**
+     * Set a Float object to the passed prepared statement as a float or as null.
+     */
+    public static void  setFloat(PreparedStatement ps, int pos, Float f) throws SQLException
+    {
+        if (f==null)
+        {
+            ps.setNull(pos, Types.FLOAT);
+        }
+        else
+        {
+            ps.setFloat(pos, f.floatValue());
+        }
+    }
+
+    /**
+     * Retrieves a double value from the passed result set as a Double object.
+     */
+    public static Double getDouble(ResultSet rs, int pos) throws SQLException
+    {
+        double d = rs.getDouble(pos);
+        return rs.wasNull() ? (Double)null : new Double(d);
+    }
+
+    /**
+     * Retrieves a double value from the passed result set as a Double object.
+     */
+    public static Double getDouble(ResultSet rs, String column) throws SQLException
+    {
+        double d = rs.getDouble(column);
+        return rs.wasNull() ? (Double)null : new Double(d);
+    }
+
+    /**
+     * Set a Double object to the passed prepared statement as a double or as null.
+     */
+    public static void setDouble(PreparedStatement ps, int pos, Double d) throws SQLException
+    {
+        if (d==null)
+        {
+            ps.setNull(pos, Types.DOUBLE);
+        }
+        else
+        {
+            ps.setDouble(pos, d.doubleValue());
+        }
+    }
+
+    /**
+     * Retrieves a long value from the passed result set as a Long object.
+     */
+    public static Long getLong(ResultSet rs, int pos) throws SQLException
+    {
+        long l = rs.getLong(pos);
+        return rs.wasNull() ? (Long)null : new Long(l);
+    }
+
+    /**
+     * Retrieves a long value from the passed result set as a Long object.
+     */
+    public static Long getLong(ResultSet rs, String column) throws SQLException
+    {
+        long l = rs.getLong(column);
+        return rs.wasNull() ? (Long)null : new Long(l);
+    }
+
+    /**
+     * Set a Long object to the passed prepared statement as a long or as null.
+     */
+    public static void setLong(PreparedStatement ps, int pos, Long l) throws SQLException
+    {
+        if (l==null)
+        {
+            ps.setNull(pos, Types.BIGINT);
+        }
+        else
+        {
+            ps.setLong(pos, l.longValue());
+        }
+    }
+
+    /**
+     * Retrieves a boolean value from the passed result set as a Boolean object.
+     */
+    public static Boolean getBoolean(ResultSet rs, int pos) throws SQLException
+    {
+        boolean b = rs.getBoolean(pos);
+        return rs.wasNull() ? (Boolean)null : new Boolean(b);
+    }
+
+    /**
+     * Retrieves a boolean value from the passed result set as a Boolean object.
+     */
+    public static Boolean getBoolean(ResultSet rs, String column) throws SQLException
+    {
+        boolean b = rs.getBoolean(column);
+        return rs.wasNull() ? (Boolean)null : new Boolean(b);
+    }
+
+    /**
+     * Set a Boolean object to the passed prepared statement as a boolean or as null.
+     */
+    public static void  setBoolean(PreparedStatement ps, int pos, Boolean b) throws SQLException
+    {
+        if (b==null)
+        {
+            ps.setNull(pos, Types.BOOLEAN);
+        }
+        else
+        {
+            ps.setBoolean(pos, b.booleanValue());
+        }
+    }
+
+    ////////////////////////////////////////////////////
+    // Date helper methods
+    ////////////////////////////////////////////////////
+    
+    /**
+     * pattern for received date processing.
+     */
+    private static final String[] patterns = new String[]
+    {
+        "EEE, dd MMM yyyy HH:mm:ss '-'S '('z')'",
+        "EEE, dd MMM yyyy HH:mm:ss '+'S '('z')'",
+        "EEE, dd MMM yyyy HH:mm:ss '-'S",
+        "EEE, dd MMM yyyy HH:mm:ss '+'S",
+        "EEE, dd MMM yyyy HH:mm:ss z",
+        "EEE, dd MMM yyyy HH:mm:ss Z",
+        "EEE, dd MMM yyyy HH:mm:ss",
+        "EEE, d MMM yyyy HH:mm:ss '-'S '('z')'",
+        "EEE, d MMM yyyy HH:mm:ss '+'S '('z')'",
+        "EEE, d MMM yyyy HH:mm:ss '-'S",
+        "EEE, d MMM yyyy HH:mm:ss '+'S",
+        "EEE, d MMM yyyy HH:mm:ss z",
+        "EEE, d MMM yyyy HH:mm:ss Z",
+        "EEE, d MMM yyyy HH:mm:ss",
+
+        "EEE, dd MMM yy HH:mm:ss '-'S '('z')'",
+        "EEE, dd MMM yy HH:mm:ss '+'S '('z')'",
+        "EEE, dd MMM yy HH:mm:ss '-'S",
+        "EEE, dd MMM yy HH:mm:ss '+'S",
+        "EEE, dd MMM yy HH:mm:ss z",
+        "EEE, dd MMM yy HH:mm:ss Z",
+        "EEE, dd MMM yy HH:mm:ss",
+        "EEE, d MMM yy HH:mm:ss '-'S '('z')'",
+        "EEE, d MMM yy HH:mm:ss '+'S '('z')'",
+        "EEE, d MMM yy HH:mm:ss '-'S",
+        "EEE, d MMM yy HH:mm:ss '+'S",
+        "EEE, d MMM yy HH:mm:ss z",
+        "EEE, d MMM yy HH:mm:ss Z",
+        "EEE, d MMM yy HH:mm:ss",
+
+        "dd MMM yyyy HH:mm:ss '-'S",
+        "dd MMM yyyy HH:mm:ss '+'S",
+        "dd MMM yyyy HH:mm:ss '-'S '('z')'",
+        "dd MMM yyyy HH:mm:ss '+'S '('z')'",
+        "dd MMM yyyy HH:mm:ss z",
+        "dd MMM yyyy HH:mm:ss Z",
+        "dd MMM yyyy HH:mm:ss",
+
+        "dd MMM yyy HH:mm:ss '-'S",
+        "dd MMM yyy HH:mm:ss '+'S",
+        "dd MMM yyy HH:mm:ss '-'S '('z')'",
+        "dd MMM yyy HH:mm:ss '+'S '('z')'",
+        "dd MMM yyy HH:mm:ss z",
+        "dd MMM yyy HH:mm:ss Z",
+        "dd MMM yyy HH:mm:ss",
+
+        "yyyy.MM.dd HH:mm:ss z",
+        "yyyy.MM.dd HH:mm:ss Z",
+        "yyyy.MM.d HH:mm:ss z",
+        "yyyy.MM.d HH:mm:ss Z",
+        "yyyy.MM.dd HH:mm:ss",
+        "yyyy.MM.d HH:mm:ss",
+
+        "yy.MM.dd HH:mm:ss z",
+        "yy.MM.dd HH:mm:ss Z",
+        "yy.MM.d HH:mm:ss z",
+        "yy.MM.d HH:mm:ss Z",
+        "yy.MM.dd HH:mm:ss",
+        "yy.MM.d HH:mm:ss",
+
+        "yyyy MM dd HH:mm:ss",
+        "yyyy MM d HH:mm:ss",
+        "yyyy MM dd HH:mm:ss z",
+        "yyyy MM dd HH:mm:ss Z",
+        "yyyy MM d HH:mm:ss z",
+        "yyyy MM d HH:mm:ss Z",
+
+        "yy MM dd HH:mm:ss",
+        "yy MM d HH:mm:ss",
+        "yy MM dd HH:mm:ss z",
+        "yy MM dd HH:mm:ss Z",
+        "yy MM d HH:mm:ss z",
+        "yy MM d HH:mm:ss Z",
+
+        "yyyy-MM-dd HH:mm:ss z",
+        "yyyy-MM-dd HH:mm:ss Z",
+        "yyyy-MM-d HH:mm:ss z",
+        "yyyy-MM-d HH:mm:ss Z",
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-d HH:mm:ss",
+
+        "yy-MM-dd HH:mm:ss z",
+        "yy-MM-dd HH:mm:ss Z",
+        "yy-MM-d HH:mm:ss z",
+        "yy-MM-d HH:mm:ss Z",
+        "yy-MM-dd HH:mm:ss",
+        "yy-MM-d HH:mm:ss",
+
+        "dd MMM yyyy",
+        "d MMM yyyy",
+
+        "dd.MMM.yyyy",
+        "d.MMM.yyyy",
+
+        "dd-MMM-yyyy",
+        "d-MMM-yyyy",
+
+        "dd MM yyyy",
+        "d MM yyyy",
+
+        "dd.MM.yyyy",
+        "d.MM.yyyy",
+
+        "dd-MM-yyyy",
+        "d-MM-yyyy",
+
+        "yyyy MM dd",
+        "yyyy MM d",
+
+        "yyyy.MM.dd",
+        "yyyy.MM.d",
+
+        "yyyy-MM-dd",
+        "yyyy-MM-d",
+
+        "dd MMM yy",
+        "d MMM yy",
+
+        "dd.MMM.yy",
+        "d.MMM.yy",
+
+        "dd-MMM-yy",
+        "d-MMM-yy",
+
+        "dd MM yy",
+        "d MM yy",
+
+        "dd.MM.yy",
+        "d.MM.yy",
+
+        "dd-MM-yy",
+        "d-MM-yy",
+
+        "yy MMM dd",
+        "yy MMM d",
+
+        "yy.MMM.dd",
+        "yy.MMM.d",
+
+        "yy-MMM-dd",
+        "yy-MMM-d",
+
+        "yy MMM dd",
+        "yy MMM d",
+
+        "yy.MMM.dd",
+        "yy.MMM.d",
+
+        "yy-MMM-dd",
+        "yy-MMM-d",
+
+        "EEE dd, MMM yyyy", // ex: Wed 19, Feb 2003
+
+        "EEE dd, MMM yy" // ex: Wed 19, Feb 03
+    };
+
+
+    /**
+     * get a date from a date string representation in one of the registered formats
+     * @param strDate the date as string. If (null or empty) or correct pattern was not found
+     * @return Date object
+     */
+    static public java.util.Date getDateFromString(String strDate)
+    {
+        if (strDate != null)
+            strDate = strDate.trim();
+
+        SimpleDateFormat pSimpleDateFormat = new SimpleDateFormat("");
+        java.util.Date dReceivedDate = Calendar.getInstance().getTime();
+
+        if (strDate != null && "".equals(strDate) == false)
+        {
+            for (int i=0; i<patterns.length; i++)
+            {
+                try
+                {
+                    pSimpleDateFormat.applyPattern(patterns[i]);
+                    dReceivedDate = pSimpleDateFormat.parse(strDate);
+                    if (dReceivedDate == null)
+                    {
+                        continue;
+                    }
+                    return dReceivedDate;
+                }
+                catch (java.text.ParseException pe)
+                {
+                    // ignore this format try the next one
+                }
+            }
+        }
+        return dReceivedDate;
+    }
+
+    /**
+     * Verify that the string represantes the date with one of the registered formats
+     * @param strDate the date as string.
+     * @return boolean "true" if the string represantes the date in one of the registed formats.
+     */
+    static public boolean isDate(String strDate)
+    {
+        if (strDate != null)
+            strDate = strDate.trim();
+
+        SimpleDateFormat pSimpleDateFormat = new SimpleDateFormat("");
+        if (strDate != null && "".equals(strDate) == false)
+        {
+            for (int i=0; i<patterns.length; i++)
+            {
+                try
+                {
+                    pSimpleDateFormat.applyPattern(patterns[i]);
+                    java.util.Date dReceivedDate = pSimpleDateFormat.parse(strDate);
+                    if (dReceivedDate == null)
+                        continue;
+                    return true;
+                }
+                catch (java.text.ParseException pe)
+                {
+                    // ignore as it is reported below
+                }
+            }
+        }
+        return false;
+    }
+}

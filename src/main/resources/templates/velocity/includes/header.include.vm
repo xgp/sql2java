@@ -1,0 +1,8 @@
+##$Id: header.include.vm,v 1.5 2005/10/10 20:11:47 framiere Exp $
+#set ( $db = $codewriter.db )
+#set ( $allPackages     = $db.getAllPackages() )
+#set ( $widgetPkg       = "${pkg}.widget")
+#set ( $SPACE           = "    ")
+#set ( $IMPORT_BLOCK    = "imports")
+#set ( $EXTENDS_BLOCK   = "extends")
+#set ( $CLASS_BLOCK     = "class")
