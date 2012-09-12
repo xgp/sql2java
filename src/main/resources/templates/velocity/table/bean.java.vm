@@ -23,7 +23,7 @@ public class $beanClass
 #if ($extendsClass)
     extends $extendsClass
 #end
-    implements Serializable
+    implements Serializable, DaoBean
 #if ($implementsClasses)
     #foreach( $implements in $implementsClasses )$implements#end
 #end
@@ -207,9 +207,19 @@ public class $beanClass
      */
     public String toString()
     {
-        return   "\n[$tablename] "
+        return toString("\n");
+    }
+
+    /**
+     * Returns the object string representation.
+     * @param delim use the provided delimiter between fields.
+     * @return the object as a string
+     */
+    public String toString(String delim)
+    {
+        return   "[$tablename] "
 #foreach ( $column in $columns )
-                 + "\n - $column.getFullName() = " + ($strUtil.getInitializedVarName($column) ? ("[" + ($strUtil.getVarName($column) == null ? null : ${strUtil.getVarName($column)}.toString()) + "]") : "not initialized") + ""
+                 + delim + " - $column.getFullName() = " + ($strUtil.getInitializedVarName($column) ? ("[" + ($strUtil.getVarName($column) == null ? null : ${strUtil.getVarName($column)}.toString()) + "]") : "not initialized") + ""
 #end
             ;
     }
@@ -217,11 +227,11 @@ public class $beanClass
     /**
      * return a dictionary of the object
      */
-    public Map getDictionary()
+    public Map<String,Object> getDictionary()
     {
-        Map dictionary = new HashMap();
+        Map<String,Object> dictionary = new HashMap<String,Object>();
 #foreach ( $column in $columns )
-        dictionary.put("$column.getName().toLowerCase()", $strUtil.getGetMethod($column)() == null ? "" : ${strUtil.getGetMethod($column)}().toString());
+        dictionary.put("$column.getName().toLowerCase()", ${strUtil.getGetMethod($column)}());
 #end
         return dictionary;
     }
@@ -232,14 +242,14 @@ public class $beanClass
      * no primary key, the regular dictionary is returned
 #end
      */
-    public Map getPkDictionary()
+    public Map<String,Object> getPkDictionary()
     {
 #if ( $table.countPrimaryKeys() == 0)
         return getDictionary();
 #else
-        Map dictionary = new HashMap();
+        Map<String,Object> dictionary = new HashMap<String,Object>();
 #foreach ( $column in $primaryKeys )
-        dictionary.put("$column.getName().toLowerCase()", $strUtil.getGetMethod($column)() == null ? "" : ${strUtil.getGetMethod($column)}().toString());
+        dictionary.put("$column.getName().toLowerCase()", ${strUtil.getGetMethod($column)}());
 #end
         return dictionary;
 #end

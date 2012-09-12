@@ -10,6 +10,7 @@ public interface DaoBean
     public boolean isNew();
     public boolean isModified();
     public void resetIsModified();
-    public Map getDictionnary();
-    public Map getPkDictionnary();
+    public Map<String,Object> getDictionary();
+    public Map<String,Object> getPkDictionary();
+    public String toString(String delim);
 }

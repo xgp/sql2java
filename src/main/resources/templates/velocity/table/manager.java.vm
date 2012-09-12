@@ -28,15 +28,6 @@ public class $managerClass extends BaseManager<$beanClass>
 {
     private static final Logger log = LoggerFactory.getLogger(${managerClass}.class.getName());
 
-    /* set =QUERY for loadUsingTemplate */
-    static public final int SEARCH_EXACT = 0;
-    /* set %QUERY% for loadLikeTemplate */
-    static public final int SEARCH_LIKE = 1;
-    /* set %QUERY for loadLikeTemplate */
-    static public final int SEARCH_STARTING_LIKE = 2;
-    /* set QUERY% for loadLikeTemplate */
-    static public final int SEARCH_ENDING_LIKE = 3;
-
 #foreach ( $column in $columns ) #set ( $vcmo = $velocityCount - 1 )
     /**
      * Identify the $column.getName() field.
@@ -96,6 +87,16 @@ public class $managerClass extends BaseManager<$beanClass>
     public $beanClass create$beanClass()
     {
         return new $beanClass();
+    }
+
+    /**
+     * Creates a new $beanClass instance.
+     *
+     * @return the new $beanClass
+     */
+    public $beanClass createBean()
+    {
+        return create$beanClass();
     }
 
     /**
@@ -243,63 +244,8 @@ public class $managerClass extends BaseManager<$beanClass>
 #end
 
     //////////////////////////////////////
-    // LOAD ALL
-    //////////////////////////////////////
-
-    /**
-     * Loads all the rows from $tablename.
-     *
-     * @return an array of $managerClass bean
-     */
-    //5
-    public $beanClass[] loadAll() throws SQLException
-    {
-        return loadUsingTemplate(null);
-    }
-
-
-    /**
-     * Loads the given number of rows from $tablename, given the start row.
-     *
-     * @param startRow the start row to be used (first row = 1, last row = -1)
-     * @param numRows the number of rows to be retrieved (all rows = a negative number)
-     * @return an array of $managerClass bean
-     */
-    //6
-    public $beanClass[] loadAll(int startRow, int numRows) throws SQLException
-    {
-        return loadUsingTemplate(null, startRow, numRows);
-    }
-
-    //////////////////////////////////////
     // SQL 'WHERE' METHOD
     //////////////////////////////////////
-    /**
-     * Retrieves an array of $beanClass given a sql 'where' clause.
-     *
-     * @param where the sql 'where' clause
-     * @return the resulting $beanClass table
-     */
-    //7
-    public $beanClass[] loadByWhere(String where) throws SQLException
-    {
-        return loadByWhere(where, null);
-    }
-
-    /**
-     * Retrieves an array of $beanClass given a sql where clause, and a list of fields.
-     * It is up to you to pass the 'WHERE' in your where clausis.
-     *
-     * @param where the sql 'WHERE' clause
-     * @param fieldList array of field's ID
-     * @return the resulting $beanClass table
-     */
-    //8
-    public $beanClass[] loadByWhere(String where, int[] fieldList) throws SQLException
-    {
-        return loadByWhere(where, fieldList, 1, -1);
-    }
-
     /**
      * Retrieves an array of $beanClass given a sql where clause and a list of fields, and startRow and numRows.
      * It is up to you to pass the 'WHERE' in your where clausis.
@@ -350,18 +296,6 @@ public class $managerClass extends BaseManager<$beanClass>
         }
     }
 
-
-    /**
-     * Deletes all rows from $tablename table.
-     * @return the number of deleted rows.
-     */
-    //10
-    public int deleteAll() throws SQLException
-    {
-        return deleteByWhere("");
-    }
-
-
     /**
      * Deletes rows from the $tablename table using a 'where' clause.
      * It is up to you to pass the 'WHERE' in your where clausis.
@@ -395,44 +329,6 @@ public class $managerClass extends BaseManager<$beanClass>
     //
     // SAVE
     //_____________________________________________________________________
-    /**
-     * Saves the $beanClass bean into the database.
-     *
-     * @param bean the $beanClass bean to be saved
-     */
-    //12
-    public $beanClass save($beanClass bean) throws SQLException
-    {
-        if (bean.isNew())
-            return insert(bean);
-        else
-            return update(bean);
-    }
-
-    /**
-     * Insert the $beanClass bean into the database.
-     *
-     * @param bean the $beanClass bean to be saved
-     */
-    //13
-    public $beanClass insert($beanClass bean) throws SQLException
-    {
-	return insert(bean, false);
-    }
-
-    /**
-     * Insert the $beanClass bean into the database.
-     *
-     * @param bean the $beanClass bean to be saved
-     * @param orUpdate on duplicate key update
-     */
-    //13
-    public $beanClass insert($beanClass bean, boolean orUpdate) throws SQLException
-    {
-	return insert(bean, orUpdate, false);
-    }
-
-
     /**
      * Insert the $beanClass bean into the database.
      *
@@ -696,45 +592,6 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
         }
     }
 
-    /**
-     * Saves an array of $beanClass beans into the database.
-     *
-     * @param beans the $beanClass bean table to be saved
-     * @return the saved $beanClass array.
-     */
-    //15
-    public $beanClass[] save($beanClass[] beans) throws SQLException
-    {
-        for (int iIndex = 0; iIndex < beans.length; iIndex ++)
-        {
-            save(beans[iIndex]);
-        }
-        return beans;
-    }
-
-    /**
-     * Insert an array of $beanClass beans into the database.
-     *
-     * @param beans the $beanClass bean table to be inserted
-     * @return the saved $beanClass array.
-     */
-    //16
-    public $beanClass[] insert($beanClass[] beans) throws SQLException
-    {
-        return save(beans);
-    }
-
-    /**
-     * Updates an array of $beanClass beans into the database.
-     *
-     * @param beans the $beanClass bean table to be inserted
-     * @return the saved $beanClass array.
-     */
-    //17
-    public $beanClass[] update($beanClass[] beans) throws SQLException
-    {
-        return save(beans);
-    }
 
 
 
@@ -742,48 +599,6 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
     //
     // USING TEMPLATE
     //_____________________________________________________________________
-    /**
-     * Loads a unique $beanClass bean from a template one giving a c
-     *
-     * @param bean the $beanClass bean to look for
-     * @return the bean matching the template
-     */
-    //18
-    public $beanClass loadUniqueUsingTemplate($beanClass bean) throws SQLException
-    {
-         $beanClass[] beans = loadUsingTemplate(bean);
-         if (beans.length == 0)
-             return null;
-         if (beans.length > 1)
-             throw new SQLException("More than one element !!");
-         return beans[0];
-     }
-
-    /**
-     * Loads an array of $beanClass from a template one.
-     *
-     * @param bean the $beanClass template to look for
-     * @return all the $beanClass matching the template
-     */
-    //19
-    public $beanClass[] loadUsingTemplate($beanClass bean) throws SQLException
-    {
-        return loadUsingTemplate(bean, 1, -1);
-    }
-
-    /**
-     * Loads an array of $beanClass from a template one, given the start row and number of rows.
-     *
-     * @param bean the $beanClass template to look for
-     * @param startRow the start row to be used (first row = 1, last row=-1)
-     * @param numRows the number of rows to be retrieved (all rows = a negative number)
-     * @return all the $beanClass matching the template
-     */
-    //20
-    public $beanClass[] loadUsingTemplate($beanClass bean, int startRow, int numRows) throws SQLException
-    {
-        return loadUsingTemplate(bean, startRow, numRows, SEARCH_EXACT);
-    }
 
     /**
      * Loads an array of $beanClass from a template one, given the start row and number of rows.
@@ -886,17 +701,6 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
     //_____________________________________________________________________
 
     /**
-     * Retrieves the number of rows of the table $tablename.
-     *
-     * @return the number of rows returned
-     */
-    //24
-    public int countAll() throws SQLException
-    {
-        return countWhere("");
-    }
-
-    /**
      * Retrieves the number of rows of the table $tablename with a 'where' clause.
      * It is up to you to pass the 'WHERE' in your where clausis.
      *
@@ -957,32 +761,6 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
             close(rs);
         }
        throw new SQLException("Error in countByPreparedStatement");
-    }
-
-    /**
-     * count the number of elements of a specific $beanClass bean
-     *
-     * @param bean the $beanClass bean to look for ant count
-     * @return the number of rows returned
-     */
-    //27
-    public int countUsingTemplate($beanClass bean) throws SQLException
-    {
-        return countUsingTemplate(bean, -1, -1);
-    }
-
-    /**
-     * count the number of elements of a specific $beanClass bean , given the start row and number of rows.
-     *
-     * @param bean the $beanClass template to look for and count
-     * @param startRow the start row to be used (first row = 1, last row=-1)
-     * @param numRows the number of rows to be retrieved (all rows = a negative number)
-     * @return the number of rows returned
-     */
-    //20
-    public int countUsingTemplate($beanClass bean, int startRow, int numRows) throws SQLException
-    {
-        return countUsingTemplate(bean, startRow, numRows, SEARCH_EXACT);
     }
 
     /**
@@ -1116,40 +894,6 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
     // DECODE RESULT SET
     //_____________________________________________________________________
 
-    /**
-     * decode a resultset in an array of $beanClass objects
-     *
-     * @param rs the resultset to decode
-     * @param fieldList table of the field's associated constants
-     * @param startRow the start row to be used (first row = 1, last row = -1)
-     * @param numRows the number of rows to be retrieved (all rows = a negative number)
-     * @return the resulting $beanClass table
-     */
-    //28
-    public $beanClass[] decodeResultSet(ResultSet rs, int[] fieldList, int startRow, int numRows) throws SQLException
-    {
-        java.util.List v = new java.util.ArrayList();
-        int count = 0;
-        try
-        {
-            if (rs.absolute(startRow) && numRows!=0)
-            {
-                do
-                {
-                    if(fieldList == null)
-                        v.add(decodeRow(rs));
-                    else
-                        v.add(decodeRow(rs, fieldList));
-                    count++;
-                } while ( (count<numRows||numRows<0) && rs.next() );
-            }
-            return ($beanClass[])v.toArray(new $beanClass[v.size()]);
-        }
-        finally
-        {
-            if (v != null) { v.clear(); v = null;}
-        }
-    }
 
     /**
      * Transforms a ResultSet iterating on the $tablename on a $beanClass bean.
@@ -1221,60 +965,6 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
         bean.resetIsModified();
 
         return bean;
-    }
-
-    //////////////////////////////////////
-    // PREPARED STATEMENT LOADER
-    //////////////////////////////////////
-
-    /**
-     * Loads all the elements using a prepared statement.
-     *
-     * @param ps the PreparedStatement to be used
-     * @return an array of $beanClass
-     */
-    //32
-    public $beanClass[] loadByPreparedStatement(PreparedStatement ps) throws SQLException
-    {
-        return loadByPreparedStatement(ps, null);
-    }
-
-    /**
-     * Loads all the elements using a prepared statement specifying a list of fields to be retrieved.
-     *
-     * @param ps the PreparedStatement to be used
-     * @param fieldList table of the field's associated constants
-     * @return an array of $beanClass
-     */
-    //33
-    public $beanClass[] loadByPreparedStatement(PreparedStatement ps, int[] fieldList) throws SQLException
-    {
-        return loadByPreparedStatement(ps, fieldList, 1, -1);
-    }
-
-    /**
-     * Loads all the elements using a prepared statement specifying a list of fields to be retrieved,
-     * and specifying the start row and the number of rows.
-     *
-     * @param ps the PreparedStatement to be used
-     * @param startRow the start row to be used (first row = 1, last row = -1)
-     * @param numRows the number of rows to be retrieved (all rows = a negative number)
-     * @param fieldList table of the field's associated constants
-     * @return an array of $beanClass
-     */
-    //34
-    public $beanClass[] loadByPreparedStatement(PreparedStatement ps, int[] fieldList, int startRow, int numRows) throws SQLException
-    {
-        ResultSet rs =  null;
-        try
-        {
-            rs = ps.executeQuery();
-            return decodeResultSet(rs, fieldList, startRow, numRows);
-        }
-        finally
-        {
-            close(rs);
-        }
     }
 
 }

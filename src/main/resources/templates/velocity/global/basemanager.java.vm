@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 import javax.sql.DataSource;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -18,9 +20,18 @@ import org.slf4j.LoggerFactory;
 /**
  * Base data access manager.
  */
-public abstract class BaseManager<T> implements DaoManager<T>
+public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
 {
     private static final Logger logger = LoggerFactory.getLogger(BaseManager.class);
+
+    /* set =QUERY for loadUsingTemplate */
+    static public final int SEARCH_EXACT = 0;
+    /* set %QUERY% for loadLikeTemplate */
+    static public final int SEARCH_LIKE = 1;
+    /* set %QUERY for loadLikeTemplate */
+    static public final int SEARCH_STARTING_LIKE = 2;
+    /* set QUERY% for loadLikeTemplate */
+    static public final int SEARCH_ENDING_LIKE = 3;
 
     protected BaseManager(DataSource dataSource) {
 	this.dataSource = dataSource;
@@ -38,18 +49,80 @@ public abstract class BaseManager<T> implements DaoManager<T>
     }
 
     /**
-     * Retrieves an array of objects given a sql 'where' clause.
+     * Creates a new bean instance.
      *
-     * @param where The sql 'where' clause
-     * @return the Resulting object array
+     * @return the new bean
      */
-    public abstract T[] loadByWhere(String where) throws SQLException;
+    public abstract T createBean();
+
+    /**
+     * Deletes rows according to its keys.
+     *
+     * @return the number of deleted rows
+     */
+    public int deleteByPrimaryKey(Integer id) throws SQLException {
+	throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Loads all the rows from table.
+     *
+     * @return an array of beans
+     */
+    public T[] loadAll() throws SQLException {
+        return loadUsingTemplate(null);
+    }
+
+    /**	
+     * Loads the given number of rows from table, given the start row.
+     *
+     * @param startRow the start row to be used (first row = 1, last row = -1)
+     * @param numRows the number of rows to be retrieved (all rows = a negative number)
+     * @return an array of beans
+     */
+    public T[] loadAll(int startRow, int numRows) throws SQLException {
+        return loadUsingTemplate(null, startRow, numRows);
+    }
+
+    /**
+     * Retrieves an array of beans given a sql 'where' clause.
+     *
+     * @param where the sql 'where' clause
+     * @return the resulting bean
+     */
+    public T[] loadByWhere(String where) throws SQLException {
+        return loadByWhere(where, null);
+    }
+
+    /**
+     * Retrieves an array of beans given a sql where clause, and a list of fields.
+     * It is up to you to pass the 'WHERE' in your where clausis.
+     *
+     * @param where the sql 'WHERE' clause
+     * @param fieldList array of field's ID
+     * @return the resulting beans
+     */
+    public T[] loadByWhere(String where, int[] fieldList) throws SQLException {
+        return loadByWhere(where, fieldList, 1, -1);
+    }
+
+    /**
+     * Retrieves an array of $beanClass given a sql where clause and a list of fields, and startRow and numRows.
+     * It is up to you to pass the 'WHERE' in your where clausis.
+     *
+     * @param where the sql 'where' clause
+     * @param startRow the start row to be used (first row = 1, last row = -1)
+     * @param numRows the number of rows to be retrieved (all rows = a negative number)
+     * @param fieldList table of the field's associated constants
+     * @return the resulting $beanClass table
+     * /
+    public abstract T[] loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException;
 
     /**
      * Retrieves the unique object given a sql 'where' clause.
      *
      * @param where The sql 'where' clause
-     * @return The resulting object
+     * @return The resulting bean
      */
     public T loadUniqueByWhere(String where) throws SQLException {
         T[] os = loadByWhere(where);
@@ -60,45 +133,312 @@ public abstract class BaseManager<T> implements DaoManager<T>
         }
     }
 
-    // public T createBean();
-    // public int deleteByPrimaryKey(Integer id) throws SQLException;
-    // public T[] loadAll() throws SQLException;
-    // public T[] loadAll(int startRow, int numRows) throws SQLException;
-    // public T[] loadByWhere(String where, int[] fieldList) throws SQLException;
-    // public T[] loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException;
-    // public int deleteAll() throws SQLException;
-    // public int deleteByWhere(String where) throws SQLException;
-    // public T save(T bean) throws SQLException;
-    // public T insert(T bean) throws SQLException;
-    // public T insert(T bean, boolean orUpdate) throws SQLException;
-    // public T insert(T bean, boolean orUpdate, boolean delayed) throws SQLException;
-    // public T update(T bean) throws SQLException;
-    // public T[] save(T[] beans) throws SQLException;
-    // public T[] insert(T[] beans) throws SQLException;
-    // public T[] update(T[] beans) throws SQLException;
-    // public T loadUniqueUsingTemplate(T bean) throws SQLException;
-    // public T[] loadUsingTemplate(T bean) throws SQLException;
-    // public T[] loadUsingTemplate(T bean, int startRow, int numRows) throws SQLException;
-    // public T[] loadUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
-    // public int deleteUsingTemplate(T bean) throws SQLException;
-    // public int countAll() throws SQLException;
-    // public int countWhere(String where) throws SQLException;
-    // public int countUsingTemplate(T bean) throws SQLException;
-    // public int countUsingTemplate(T bean, int startRow, int numRows) throws SQLException;
-    // public int countUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
-    // public T[] decodeResultSet(ResultSet rs, int[] fieldList, int startRow, int numRows) throws SQLException;
-    // public T decodeRow(ResultSet rs) throws SQLException;
-    // public T decodeRow(ResultSet rs, int[] fieldList) throws SQLException;
-    // public T metaDataDecodeRow(ResultSet rs) throws SQLException;
-    // public T[] loadByPreparedStatement(PreparedStatement ps) throws SQLException;
-    // public T[] loadByPreparedStatement(PreparedStatement ps, int[] fieldList) throws SQLException;
-    // public T[] loadByPreparedStatement(PreparedStatement ps, int[] fieldList, int startRow, int numRows) throws SQLException;
+    /**
+     * Deletes all rows from table.
+     * @return the number of deleted rows.
+     */
+    public int deleteAll() throws SQLException {
+        return deleteByWhere("");
+    }
+
+    /**
+     * Deletes rows from the table using a 'where' clause.
+     * It is up to you to pass the 'WHERE' in your where clausis.
+     * <br>Attention, if 'WHERE' is omitted it will delete all records.
+     *
+     * @param where the sql 'where' clause
+     * @return the number of deleted rows
+     */
+    public abstract int deleteByWhere(String where) throws SQLException;
+
+    /**
+     * Saves the bean into the database.
+     *
+     * @param bean the bean to be saved
+     */
+    public T save(T bean) throws SQLException {
+        if (bean.isNew())
+            return insert(bean);
+        else
+            return update(bean);
+    }
+
+    /**
+     * Insert the bean into the database.
+     *
+     * @param bean the bean to be saved
+     */
+    public T insert(T bean) throws SQLException {
+	return insert(bean, false);
+    }
+
+    /**
+     * Insert the bean into the database.
+     *
+     * @param bean the bean to be saved
+     * @param orUpdate on duplicate key update
+     */
+    public T insert(T bean, boolean orUpdate) throws SQLException {
+	return insert(bean, orUpdate, false);
+    }
+
+    /**
+     * Insert the bean into the database.
+     *
+     * @param bean the bean to be saved
+     * @param orUpdate on duplicate key update
+     * @param delayed use INSERT DELAYED and don't get generated keys
+     */
+    public abstract T insert(T bean, boolean orUpdate, boolean delayed) throws SQLException;
+
+    /**
+     * Update the $beanClass bean record in the database according to the changes.
+     *
+     * @param bean the $beanClass bean to be updated
+     */
+    public abstract T update(T bean) throws SQLException;
+
+    /**
+     * Saves an array of beans into the database.
+     *
+     * @param beans to be saved
+     * @return the saved bean array.
+     */
+    public T[] save(T[] beans) throws SQLException {
+        for (int iIndex = 0; iIndex < beans.length; iIndex ++) {
+            save(beans[iIndex]);
+        }
+        return beans;
+    }
+
+    /**
+     * Insert an array of beans into the database.
+     *
+     * @param beans to be inserted
+     * @return the saved bean array.
+     */
+    public T[] insert(T[] beans) throws SQLException {
+        return save(beans);
+    }
+
+    /**
+     * Updates an array of beans into the database.
+     *
+     * @param beans to be inserted
+     * @return the saved bean array.
+     */
+    public T[] update(T[] beans) throws SQLException {
+        return save(beans);
+    }
+
+    /**
+     * Loads a unique bean from a template one giving a c
+     *
+     * @param bean the bean to look for
+     * @return the bean matching the template
+     */
+    public T loadUniqueUsingTemplate(T bean) throws SQLException {
+         T[] beans = loadUsingTemplate(bean);
+         if (beans.length == 0)
+             return null;
+         if (beans.length > 1)
+             throw new SQLException("More than one element !!");
+         return beans[0];
+    }
+
+    /**
+     * Loads an array of from a template one.
+     *
+     * @param bean the template to look for
+     * @return all the matching the template
+     */
+    public T[] loadUsingTemplate(T bean) throws SQLException {
+        return loadUsingTemplate(bean, 1, -1);
+    }
+
+    /**
+     * Loads an array of from a template one, given the start row and number of rows.
+     *
+     * @param bean the template to look for
+     * @param startRow the start row to be used (first row = 1, last row=-1)
+     * @param numRows the number of rows to be retrieved (all rows = a negative number)
+     * @return all the matching the template
+     */
+    public T[] loadUsingTemplate(T bean, int startRow, int numRows) throws SQLException {
+        return loadUsingTemplate(bean, startRow, numRows, SEARCH_EXACT);
+    }
+
+    /**
+     * Loads an array of beans from a template one, given the start row and number of rows.
+     *
+     * @param bean the bean template to look for
+     * @param startRow the start row to be used (first row = 1, last row=-1)
+     * @param numRows the number of rows to be retrieved (all rows = a negative number)
+     * @param searchType exact ?  like ? starting like ?
+     * @return all the beans matching the template
+     */
+    public abstract T[] loadUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
+
+    /**
+     * Deletes rows using a bean template.
+     *
+     * @param bean the bean object(s) to be deleted
+     * @return the number of deleted objects
+     */
+    public abstract int deleteUsingTemplate(T bean) throws SQLException;
+
+    /**
+     * Retrieves the number of rows of the table.
+     *
+     * @return the number of rows returned
+     */
+    public int countAll() throws SQLException {
+        return countWhere("");
+    }
+
+    /**
+     * Retrieves the number of rows of the table with a 'where' clause.
+     * It is up to you to pass the 'WHERE' in your where clause.
+     *
+     * @param where the restriction clause
+     * @return the number of rows returned
+     */
+    public abstract int countWhere(String where) throws SQLException;
+
+    /**
+     * Count the number of elements of a specific bean
+     *
+     * @param bean the bean to look for ant count
+     * @return the number of rows returned
+     */
+    public int countUsingTemplate(T bean) throws SQLException {
+        return countUsingTemplate(bean, -1, -1);
+    }
+
+    /**
+     * Count the number of elements of a specific bean, given the start row and number of rows.
+     *
+     * @param bean the template to look for and count
+     * @param startRow the start row to be used (first row = 1, last row=-1)
+     * @param numRows the number of rows to be retrieved (all rows = a negative number)
+     * @return the number of rows returned
+     */
+    public int countUsingTemplate(T bean, int startRow, int numRows) throws SQLException {
+        return countUsingTemplate(bean, startRow, numRows, SEARCH_EXACT);
+    }
+
+    /**
+     * Count the number of elements of a specific bean given the start row and number of rows and the search type
+     *
+     * @param bean the template to look for
+     * @param startRow the start row to be used (first row = 1, last row=-1)
+     * @param numRows the number of rows to be retrieved (all rows = a negative number)
+     * @param searchType exact ?  like ? starting like ?
+     * @return the number of rows returned
+     */
+    public abstract int countUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
+
+    /**
+     * Decode a ResultSet in an array of objects
+     *
+     * @param rs the resultset to decode
+     * @param fieldList table of the field's associated constants
+     * @param startRow the start row to be used (first row = 1, last row = -1)
+     * @param numRows the number of rows to be retrieved (all rows = a negative number)
+     * @return the resulting bean array
+     */
+    public T[] decodeResultSet(ResultSet rs, int[] fieldList, int startRow, int numRows) throws SQLException {
+        java.util.List v = new java.util.ArrayList();
+        int count = 0;
+        try {
+            if (rs.absolute(startRow) && numRows!=0) {
+                do {
+                    if(fieldList == null)
+                        v.add(decodeRow(rs));
+                    else
+                        v.add(decodeRow(rs, fieldList));
+                    count++;
+                } while ( (count<numRows||numRows<0) && rs.next() );
+            }
+            return (T[])v.toArray();
+        } finally {
+            if (v != null) { v.clear(); v = null;}
+        }
+    }
+
+    /**
+     * Transforms a ResultSet iterating on a bean.
+     *
+     * @param rs the ResultSet to be transformed
+     * @return bean resulting bean
+     */
+    public abstract T decodeRow(ResultSet rs) throws SQLException;
+
+    /**
+     * Transforms a ResultSet iterating on a bean according to a list of fields.
+     *
+     * @param rs the ResultSet to be transformed
+     * @param fieldList table of the field's associated constants
+     * @return bean resulting bean
+     */
+    public abstract T decodeRow(ResultSet rs, int[] fieldList) throws SQLException;
+
+    /**
+     * Transforms a ResultSet iterating on a bean using the names of the columns
+     *
+     * @param rs the ResultSet to be transformed
+     * @return bean resulting bean
+     */
+    public abstract T metaDataDecodeRow(ResultSet rs) throws SQLException;
+
+    /**
+     * Loads all the elements using a prepared statement.
+     *
+     * @param ps the PreparedStatement to be used
+     * @return an array of beans
+     */
+    public T[] loadByPreparedStatement(PreparedStatement ps) throws SQLException {
+        return loadByPreparedStatement(ps, null);
+    }
+
+    /**
+     * Loads all the elements using a prepared statement specifying a list of fields to be retrieved.
+     *
+     * @param ps the PreparedStatement to be used
+     * @param fieldList table of the field's associated constants
+     * @return an array of beans
+     */
+    public T[] loadByPreparedStatement(PreparedStatement ps, int[] fieldList) throws SQLException {
+        return loadByPreparedStatement(ps, fieldList, 1, -1);
+    }
+
+    /**
+     * Loads all the elements using a prepared statement specifying a list of fields to be retrieved,
+     * and specifying the start row and the number of rows.
+     *
+     * @param ps the PreparedStatement to be used
+     * @param startRow the start row to be used (first row = 1, last row = -1)
+     * @param numRows the number of rows to be retrieved (all rows = a negative number)
+     * @param fieldList table of the field's associated constants
+     * @return an array of beans
+     */
+    public T[] loadByPreparedStatement(PreparedStatement ps, int[] fieldList, int startRow, int numRows) throws SQLException {
+        ResultSet rs =  null;
+        try {
+            rs = ps.executeQuery();
+            return decodeResultSet(rs, fieldList, startRow, numRows);
+        } finally {
+            close(rs);
+        }
+    }
+
+
+    // UTILITIES
 
     /**
      * @return an auto commit connection
      */
-    public Connection getConnection() throws SQLException
-    {
+    public Connection getConnection() throws SQLException {
 	return dataSource.getConnection();
     }
 
@@ -172,8 +512,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Retrieves an int value from the passed result set as an Integer object.
      */
-    public static Integer getInteger(ResultSet rs, int pos) throws SQLException
-    {
+    public static Integer getInteger(ResultSet rs, int pos) throws SQLException {
         int i = rs.getInt(pos);
         return rs.wasNull() ? (Integer)null : new Integer(i);
     }
@@ -181,8 +520,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Retrieves an int value from the passed result set as an Integer object.
      */
-    public static Integer getInteger(ResultSet rs, String column) throws SQLException
-    {
+    public static Integer getInteger(ResultSet rs, String column) throws SQLException {
         int i = rs.getInt(column);
         return rs.wasNull() ? (Integer)null : new Integer(i);
     }
@@ -190,8 +528,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Set an Integer object to the passed prepared statement as an int or as null.
      */
-    public static void setInteger(PreparedStatement ps, int pos, Integer i) throws SQLException
-    {
+    public static void setInteger(PreparedStatement ps, int pos, Integer i) throws SQLException {
         if (i==null)
         {
             ps.setNull(pos, Types.INTEGER);
@@ -205,8 +542,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Retrieves a float value from the passed result set as a Float object.
      */
-    public static Float getFloat(ResultSet rs, int pos) throws SQLException
-    {
+    public static Float getFloat(ResultSet rs, int pos) throws SQLException {
         float f = rs.getFloat(pos);
         return rs.wasNull() ? (Float)null : new Float(f);
     }
@@ -214,8 +550,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Retrieves a float value from the passed result set as a Float object.
      */
-    public static Float getFloat(ResultSet rs, String column) throws SQLException
-    {
+    public static Float getFloat(ResultSet rs, String column) throws SQLException {
         float f = rs.getFloat(column);
         return rs.wasNull() ? (Float)null : new Float(f);
     }
@@ -223,8 +558,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Set a Float object to the passed prepared statement as a float or as null.
      */
-    public static void  setFloat(PreparedStatement ps, int pos, Float f) throws SQLException
-    {
+    public static void  setFloat(PreparedStatement ps, int pos, Float f) throws SQLException {
         if (f==null)
         {
             ps.setNull(pos, Types.FLOAT);
@@ -238,8 +572,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Retrieves a double value from the passed result set as a Double object.
      */
-    public static Double getDouble(ResultSet rs, int pos) throws SQLException
-    {
+    public static Double getDouble(ResultSet rs, int pos) throws SQLException {
         double d = rs.getDouble(pos);
         return rs.wasNull() ? (Double)null : new Double(d);
     }
@@ -247,8 +580,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Retrieves a double value from the passed result set as a Double object.
      */
-    public static Double getDouble(ResultSet rs, String column) throws SQLException
-    {
+    public static Double getDouble(ResultSet rs, String column) throws SQLException {
         double d = rs.getDouble(column);
         return rs.wasNull() ? (Double)null : new Double(d);
     }
@@ -256,8 +588,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Set a Double object to the passed prepared statement as a double or as null.
      */
-    public static void setDouble(PreparedStatement ps, int pos, Double d) throws SQLException
-    {
+    public static void setDouble(PreparedStatement ps, int pos, Double d) throws SQLException {
         if (d==null)
         {
             ps.setNull(pos, Types.DOUBLE);
@@ -271,8 +602,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Retrieves a long value from the passed result set as a Long object.
      */
-    public static Long getLong(ResultSet rs, int pos) throws SQLException
-    {
+    public static Long getLong(ResultSet rs, int pos) throws SQLException {
         long l = rs.getLong(pos);
         return rs.wasNull() ? (Long)null : new Long(l);
     }
@@ -280,8 +610,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Retrieves a long value from the passed result set as a Long object.
      */
-    public static Long getLong(ResultSet rs, String column) throws SQLException
-    {
+    public static Long getLong(ResultSet rs, String column) throws SQLException {
         long l = rs.getLong(column);
         return rs.wasNull() ? (Long)null : new Long(l);
     }
@@ -289,8 +618,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Set a Long object to the passed prepared statement as a long or as null.
      */
-    public static void setLong(PreparedStatement ps, int pos, Long l) throws SQLException
-    {
+    public static void setLong(PreparedStatement ps, int pos, Long l) throws SQLException {
         if (l==null)
         {
             ps.setNull(pos, Types.BIGINT);
@@ -304,8 +632,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Retrieves a boolean value from the passed result set as a Boolean object.
      */
-    public static Boolean getBoolean(ResultSet rs, int pos) throws SQLException
-    {
+    public static Boolean getBoolean(ResultSet rs, int pos) throws SQLException {
         boolean b = rs.getBoolean(pos);
         return rs.wasNull() ? (Boolean)null : new Boolean(b);
     }
@@ -313,8 +640,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Retrieves a boolean value from the passed result set as a Boolean object.
      */
-    public static Boolean getBoolean(ResultSet rs, String column) throws SQLException
-    {
+    public static Boolean getBoolean(ResultSet rs, String column) throws SQLException {
         boolean b = rs.getBoolean(column);
         return rs.wasNull() ? (Boolean)null : new Boolean(b);
     }
@@ -322,8 +648,7 @@ public abstract class BaseManager<T> implements DaoManager<T>
     /**
      * Set a Boolean object to the passed prepared statement as a boolean or as null.
      */
-    public static void  setBoolean(PreparedStatement ps, int pos, Boolean b) throws SQLException
-    {
+    public static void  setBoolean(PreparedStatement ps, int pos, Boolean b) throws SQLException {
         if (b==null)
         {
             ps.setNull(pos, Types.BOOLEAN);
