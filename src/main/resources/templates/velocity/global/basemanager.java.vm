@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
 {
-    private static final Logger logger = LoggerFactory.getLogger(BaseManager.class);
+    private static final Logger log = LoggerFactory.getLogger(BaseManager.class);
 
     /* set =QUERY for loadUsingTemplate */
     static public final int SEARCH_EXACT = 0;
@@ -39,6 +39,34 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     }
 
     protected DataSource dataSource;
+    protected Listener listener;
+
+    /**
+     * Contains all the full fields of the table.
+     */
+    protected abstract String[] getFullFieldNames();
+
+    /**
+     * Contains all the fields of the table.
+     */
+    protected abstract String[] getFieldNames();
+
+    /**
+     * Field that contains the comma separated fields of the table.
+     */
+    protected abstract String getAllFullFields();
+
+    /**
+     * Field that contains the comma separated fields of the table.
+     */
+    protected abstract String getAllFields();
+
+    /**
+     * Set the listener for INSERT/UPDATE/DELETE operations.
+     */
+    public void setListener(Listener listener) {
+        this.listener = listener;
+    }
 
     /**
      * Loads an object from the table using its key field.
@@ -55,6 +83,13 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @return the new bean
      */
     public abstract T createBean();
+
+    /**
+     * Table managed by this manager
+     *
+     * @return tablename
+     */
+    public abstract String getTableName();
 
     /**
      * Deletes rows according to its keys.
@@ -108,16 +143,47 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     }
 
     /**
-     * Retrieves a List of $beanClass given a sql where clause and a list of fields, and startRow and numRows.
+     * Retrieves a List of beans given a sql where clause and a list of fields, and startRow and numRows.
      * It is up to you to pass the 'WHERE' in your where clausis.
      *
      * @param where the sql 'where' clause
      * @param startRow the start row to be used (first row = 1, last row = -1)
      * @param numRows the number of rows to be retrieved (all rows = a negative number)
      * @param fieldList table of the field's associated constants
-     * @return the resulting $beanClass table
-     * /
-    public abstract List<T> loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException;
+     * @return the resulting bean List
+     */
+    public List<T> loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException
+    {
+        String sql = null;
+        if (fieldList == null) {
+            sql = "SELECT " + getAllFields() + " FROM " + getTableName() + " " + where;
+        } else {
+            StringBuilder buff = new StringBuilder();
+            buff.append("SELECT ");
+            for(int i = 0; i < fieldList.length; i++) {
+                if(i != 0) buff.append(",");
+                buff.append(getFieldNames()[fieldList[i]]);
+            }
+            buff.append(" FROM " + getTableName() + " ");
+            buff.append(where);
+            sql = buff.toString();
+            buff = null;
+        }
+        Connection c = null;
+        Statement st = null;
+        ResultSet rs =  null;
+        if (log.isTraceEnabled()) log.trace("loadByWhere: {}", sql);
+        try {
+            c = getConnection();
+            st = c.createStatement();
+            rs = st.executeQuery(sql);
+            return decodeResultSet(rs, fieldList, startRow, numRows);
+        } finally {
+            sql = null;
+            close(st, rs);
+            releaseConnection(c);
+        }
+    }
 
     /**
      * Retrieves the unique object given a sql 'where' clause.
@@ -150,7 +216,21 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @param where the sql 'where' clause
      * @return the number of deleted rows
      */
-    public abstract int deleteByWhere(String where) throws SQLException;
+    public int deleteByWhere(String where) throws SQLException
+    {
+        Connection c = null;
+        PreparedStatement ps = null;
+        try {
+            c = getConnection();
+            StringBuilder sql = new StringBuilder("DELETE FROM " + getTableName() + " " + where);
+            if (log.isTraceEnabled()) log.trace("deleteByWhere: {}", sql);
+            ps = c.prepareStatement(sql.toString());
+            return ps.executeUpdate();
+        } finally {
+            close(ps);
+            releaseConnection(c);
+        }
+    }
 
     /**
      * Saves the bean into the database.
@@ -193,9 +273,9 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     public abstract T insert(T bean, boolean orUpdate, boolean delayed) throws SQLException;
 
     /**
-     * Update the $beanClass bean record in the database according to the changes.
+     * Update the bean record in the database according to the changes.
      *
-     * @param bean the $beanClass bean to be updated
+     * @param bean the bean to be updated
      */
     public abstract T update(T bean) throws SQLException;
 
@@ -278,7 +358,35 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @param searchType exact ?  like ? starting like ?
      * @return all the beans matching the template
      */
-    public abstract List<T> loadUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
+    public List<T> loadUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException {
+        if (log.isTraceEnabled()) log.trace("loadUsingTemplate startRow:{}, numRows:{}, searchType:{}", new Object[] { startRow, numRows, searchType });
+        Connection c = null;
+        PreparedStatement ps = null;
+        StringBuilder sql = new StringBuilder("SELECT " + getAllFields() + " FROM " + getTableName() + " ");
+        StringBuilder sqlWhere = new StringBuilder("");
+
+        try {
+            if (fillWhere(sqlWhere, bean, searchType) == 0) {
+                if (log.isTraceEnabled()) log.trace("The bean to look is not initialized... loading all");
+            } else {
+                sql.append(" WHERE ").append(sqlWhere);
+            }
+            if (log.isTraceEnabled()) log.trace("loadUsingTemplate: {}", sql);
+            c = getConnection();
+            int scrollType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            if (startRow != 1) scrollType = ResultSet.TYPE_SCROLL_SENSITIVE;
+            ps = c.prepareStatement(sql.toString(),
+                                    scrollType,
+                                    ResultSet.CONCUR_READ_ONLY);
+            fillPreparedStatement(ps, bean, searchType);
+            return loadByPreparedStatement(ps, null, startRow, numRows);
+        } finally {
+            close(ps);
+            releaseConnection(c);
+            sql = null;
+            sqlWhere = null;
+        }
+    }
 
     /**
      * Deletes rows using a bean template.
@@ -304,7 +412,31 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @param where the restriction clause
      * @return the number of rows returned
      */
-    public abstract int countWhere(String where) throws SQLException;
+    public int countWhere(String where) throws SQLException
+    {
+        String sql = "SELECT COUNT(*) AS MCOUNT FROM " + getTableName() + " " + where;
+        if (log.isTraceEnabled()) log.trace("countWhere: {}", sql);
+        Connection c = null;
+        Statement st = null;
+        ResultSet rs =  null;
+        try {
+            int iReturn = -1;
+            c = getConnection();
+            st = c.createStatement();
+            rs =  st.executeQuery(sql);
+            if (rs.next()) {
+                iReturn = rs.getInt("MCOUNT");
+            }
+            if (iReturn != -1)
+                return iReturn;
+        } finally {
+            close(st, rs);
+            releaseConnection(c);
+            sql = null;
+        }
+        throw new SQLException("Error in countWhere");
+    }
+
 
     /**
      * Count the number of elements of a specific bean
@@ -337,7 +469,50 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @param searchType exact ?  like ? starting like ?
      * @return the number of rows returned
      */
-    public abstract int countUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
+    public int countUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException {
+        Connection c = null;
+        PreparedStatement ps = null;
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) AS MCOUNT FROM " + getTableName());
+        StringBuilder sqlWhere = new StringBuilder("");
+        try {
+            if (fillWhere(sqlWhere, bean, SEARCH_EXACT) == 0) {
+                if (log.isTraceEnabled()) log.trace("The bean to look is not initialized... counting all...");
+            } else {
+                sql.append(" WHERE ").append(sqlWhere);
+            }
+            if (log.isTraceEnabled()) log.trace("countUsingTemplate: {}", sql);
+            c = getConnection();
+            ps = c.prepareStatement(sql.toString(),
+                                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                    ResultSet.CONCUR_READ_ONLY);
+            fillPreparedStatement(ps, bean, searchType);
+            return countByPreparedStatement(ps);
+        } finally {
+            close(ps);
+            releaseConnection(c);
+            sql = null;
+            sqlWhere = null;
+        }
+    }
+
+    /**
+     * Retrieves the number of rows of the table with a prepared statement.
+     *
+     * @param ps the PreparedStatement to be used
+     * @return the number of rows returned
+     */
+    protected int countByPreparedStatement(PreparedStatement ps) throws SQLException {
+        ResultSet rs =  null;
+        try {
+            int iReturn = -1;
+            rs = ps.executeQuery();
+            if (rs.next()) iReturn = rs.getInt("MCOUNT");
+            if (iReturn != -1) return iReturn;
+        } finally {
+            close(rs);
+        }
+        throw new SQLException("Error in countByPreparedStatement");
+    }
 
     /**
      * Decode a ResultSet in a List of objects
@@ -431,8 +606,111 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
         }
     }
 
+    /**
+     * fills the given stringbuffer with the sql where clausis constructed using the bean and the search type
+     * @param sqlWhere the stringbuffer that will be filled
+     * @param bean the bean to use for creating the where clausis
+     * @param searchType exact ?  like ? starting like ?
+     * @return the number of clausis returned
+     */
+    protected abstract int fillWhere(StringBuilder sqlWhere, T bean, int searchType) throws SQLException;
+
+    /**
+     * fill the given prepared statement with the bean values and a search type
+     * @param ps the preparedStatement that will be filled
+     * @param bean the bean to use for creating the where clausis
+     * @param searchType exact ?  like ? starting like ?
+     * @return the number of clausis returned
+     */
+    protected abstract int fillPreparedStatement(PreparedStatement ps, T bean, int searchType) throws SQLException;
+
 
     // UTILITIES
+
+
+    /**
+     * Notify Listener before INSERT, suppressing exceptions from the Listener
+     * @param bean the bean before INSERT
+     */
+    protected void beforeInsert(T bean) {
+        if (listener != null) {
+            try {
+                listener.beforeInsert(bean);
+            } catch (Exception e) {
+                log.trace("Error notifying listener.beforeInsert: {}", e);
+            }
+        }
+    }
+
+    /**
+     * Notify Listener after INSERT, suppressing exceptions from the Listener
+     * @param bean the bean after INSERT
+     */
+    protected void afterInsert(T bean) {
+        if (listener != null) {
+            try {
+                listener.afterInsert(bean);
+            } catch (Exception e) {
+                log.trace("Error notifying listener.afterInsert: {}", e);
+            }
+        }
+    }
+
+    /**
+     * Notify Listener before UPDATE, suppressing exceptions from the Listener
+     * @param bean the bean before UPDATE
+     */
+    protected void beforeUpdate(T bean) {
+        if (listener != null) {
+            try {
+                listener.beforeUpdate(bean);
+            } catch (Exception e) {
+                log.trace("Error notifying listener.beforeUpdate: {}", e);
+            }
+        }
+    }
+
+    /**
+     * Notify Listener after UPDATE, suppressing exceptions from the Listener
+     * @param bean the bean after UPDATE
+     */
+    protected void afterUpdate(T bean) {
+        if (listener != null) {
+            try {
+                listener.afterUpdate(bean);
+            } catch (Exception e) {
+                log.trace("Error notifying listener.afterUpdate: {}", e);
+            }
+        }
+    }
+
+    /**
+     * Notify Listener before DELETE, suppressing exceptions from the Listener
+     * @param bean the bean before DELETE
+     */
+    protected void beforeDelete(T bean) {
+        if (listener != null) {
+            try {
+                listener.beforeDelete(bean);
+            } catch (Exception e) {
+                log.trace("Error notifying listener.beforeDelete: {}", e);
+            }
+        }
+    }
+
+    /**
+     * Notify Listener after DELETE, suppressing exceptions from the Listener
+     * @param bean the bean after DELETE
+     */
+    protected void afterDelete(T bean) {
+        if (listener != null) {
+            try {
+                listener.afterDelete(bean);
+            } catch (Exception e) {
+                log.trace("Error notifying listener.afterDelete: {}", e);
+            }
+        }
+    }
 
     /**
      * @return an auto commit connection
@@ -450,32 +728,20 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
 	    try {
 		c.close();
 	    } catch (Exception e) {
-		logger.warn("Error releasing connection.", e);
+		log.warn("Error releasing connection", e);
 	    }
 	}
     }
-
-    /**
-     * Logs a message using the underlying logwriter, if not null.
-     */
-     public void log(String message)
-     {
-	 if (logger.isTraceEnabled()) logger.trace(message);
-     }
 
     /**
      * Closes the passed Statement.
      */
     public void close(Statement s)
     {
-        try
-        {
-            if (s != null)
-                s.close();
-        }
-        catch (SQLException x)
-        {
-            log("Could not close statement!: " + x.toString());
+        try {
+            if (s != null) s.close();
+        } catch (SQLException x) {
+            log.warn("Could not close statement", x);
         }
     }
 
@@ -484,14 +750,10 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      */
     public void close(ResultSet rs)
     {
-        try
-        {
-            if (rs != null)
-                rs.close();
-        }
-        catch (SQLException x)
-        {
-            log("Could not close result set!: " + x.toString());
+        try {
+            if (rs != null) rs.close();
+        } catch (SQLException x) {
+            log.warn("Could not close result set", x);
         }
     }
 
@@ -511,7 +773,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Retrieves an int value from the passed result set as an Integer object.
      */
-    public static Integer getInteger(ResultSet rs, int pos) throws SQLException {
+    protected static Integer getInteger(ResultSet rs, int pos) throws SQLException {
         int i = rs.getInt(pos);
         return rs.wasNull() ? (Integer)null : new Integer(i);
     }
@@ -519,7 +781,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Retrieves an int value from the passed result set as an Integer object.
      */
-    public static Integer getInteger(ResultSet rs, String column) throws SQLException {
+    protected static Integer getInteger(ResultSet rs, String column) throws SQLException {
         int i = rs.getInt(column);
         return rs.wasNull() ? (Integer)null : new Integer(i);
     }
@@ -527,7 +789,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Set an Integer object to the passed prepared statement as an int or as null.
      */
-    public static void setInteger(PreparedStatement ps, int pos, Integer i) throws SQLException {
+    protected static void setInteger(PreparedStatement ps, int pos, Integer i) throws SQLException {
         if (i==null)
         {
             ps.setNull(pos, Types.INTEGER);
@@ -541,7 +803,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Retrieves a float value from the passed result set as a Float object.
      */
-    public static Float getFloat(ResultSet rs, int pos) throws SQLException {
+    protected static Float getFloat(ResultSet rs, int pos) throws SQLException {
         float f = rs.getFloat(pos);
         return rs.wasNull() ? (Float)null : new Float(f);
     }
@@ -549,7 +811,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Retrieves a float value from the passed result set as a Float object.
      */
-    public static Float getFloat(ResultSet rs, String column) throws SQLException {
+    protected static Float getFloat(ResultSet rs, String column) throws SQLException {
         float f = rs.getFloat(column);
         return rs.wasNull() ? (Float)null : new Float(f);
     }
@@ -557,7 +819,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Set a Float object to the passed prepared statement as a float or as null.
      */
-    public static void  setFloat(PreparedStatement ps, int pos, Float f) throws SQLException {
+    protected static void  setFloat(PreparedStatement ps, int pos, Float f) throws SQLException {
         if (f==null)
         {
             ps.setNull(pos, Types.FLOAT);
@@ -571,7 +833,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Retrieves a double value from the passed result set as a Double object.
      */
-    public static Double getDouble(ResultSet rs, int pos) throws SQLException {
+    protected static Double getDouble(ResultSet rs, int pos) throws SQLException {
         double d = rs.getDouble(pos);
         return rs.wasNull() ? (Double)null : new Double(d);
     }
@@ -579,7 +841,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Retrieves a double value from the passed result set as a Double object.
      */
-    public static Double getDouble(ResultSet rs, String column) throws SQLException {
+    protected static Double getDouble(ResultSet rs, String column) throws SQLException {
         double d = rs.getDouble(column);
         return rs.wasNull() ? (Double)null : new Double(d);
     }
@@ -587,7 +849,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Set a Double object to the passed prepared statement as a double or as null.
      */
-    public static void setDouble(PreparedStatement ps, int pos, Double d) throws SQLException {
+    protected static void setDouble(PreparedStatement ps, int pos, Double d) throws SQLException {
         if (d==null)
         {
             ps.setNull(pos, Types.DOUBLE);
@@ -601,7 +863,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Retrieves a long value from the passed result set as a Long object.
      */
-    public static Long getLong(ResultSet rs, int pos) throws SQLException {
+    protected static Long getLong(ResultSet rs, int pos) throws SQLException {
         long l = rs.getLong(pos);
         return rs.wasNull() ? (Long)null : new Long(l);
     }
@@ -609,7 +871,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Retrieves a long value from the passed result set as a Long object.
      */
-    public static Long getLong(ResultSet rs, String column) throws SQLException {
+    protected static Long getLong(ResultSet rs, String column) throws SQLException {
         long l = rs.getLong(column);
         return rs.wasNull() ? (Long)null : new Long(l);
     }
@@ -617,7 +879,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Set a Long object to the passed prepared statement as a long or as null.
      */
-    public static void setLong(PreparedStatement ps, int pos, Long l) throws SQLException {
+    protected static void setLong(PreparedStatement ps, int pos, Long l) throws SQLException {
         if (l==null)
         {
             ps.setNull(pos, Types.BIGINT);
@@ -631,7 +893,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Retrieves a boolean value from the passed result set as a Boolean object.
      */
-    public static Boolean getBoolean(ResultSet rs, int pos) throws SQLException {
+    protected static Boolean getBoolean(ResultSet rs, int pos) throws SQLException {
         boolean b = rs.getBoolean(pos);
         return rs.wasNull() ? (Boolean)null : new Boolean(b);
     }
@@ -639,7 +901,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Retrieves a boolean value from the passed result set as a Boolean object.
      */
-    public static Boolean getBoolean(ResultSet rs, String column) throws SQLException {
+    protected static Boolean getBoolean(ResultSet rs, String column) throws SQLException {
         boolean b = rs.getBoolean(column);
         return rs.wasNull() ? (Boolean)null : new Boolean(b);
     }
@@ -647,7 +909,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Set a Boolean object to the passed prepared statement as a boolean or as null.
      */
-    public static void  setBoolean(PreparedStatement ps, int pos, Boolean b) throws SQLException {
+    protected static void  setBoolean(PreparedStatement ps, int pos, Boolean b) throws SQLException {
         if (b==null)
         {
             ps.setNull(pos, Types.BOOLEAN);
@@ -829,7 +1091,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @param strDate the date as string. If (null or empty) or correct pattern was not found
      * @return Date object
      */
-    static public java.util.Date getDateFromString(String strDate)
+    static protected java.util.Date getDateFromString(String strDate)
     {
         if (strDate != null)
             strDate = strDate.trim();
@@ -865,26 +1127,18 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @param strDate the date as string.
      * @return boolean "true" if the string represantes the date in one of the registed formats.
      */
-    static public boolean isDate(String strDate)
+    static protected boolean isDate(String strDate)
     {
-        if (strDate != null)
-            strDate = strDate.trim();
-
+        if (strDate != null) strDate = strDate.trim();
         SimpleDateFormat pSimpleDateFormat = new SimpleDateFormat("");
-        if (strDate != null && "".equals(strDate) == false)
-        {
-            for (int i=0; i<patterns.length; i++)
-            {
-                try
-                {
+        if (strDate != null && "".equals(strDate) == false) {
+            for (int i=0; i<patterns.length; i++) {
+                try {
                     pSimpleDateFormat.applyPattern(patterns[i]);
                     java.util.Date dReceivedDate = pSimpleDateFormat.parse(strDate);
-                    if (dReceivedDate == null)
-                        continue;
+                    if (dReceivedDate == null) continue;
                     return true;
-                }
-                catch (java.text.ParseException pe)
-                {
+                } catch (java.text.ParseException pe) {
                     // ignore as it is reported below
                 }
             }

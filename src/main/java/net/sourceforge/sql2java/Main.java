@@ -46,7 +46,6 @@ public class Main {
             db.setSchema(getProperty("jdbc.schema"));
             db.setTableNamePattern(getProperty("jdbc.tablenamepattern"));
 
-
             if (overideFileProperties != null)
                 prop.putAll(overideFileProperties);
 

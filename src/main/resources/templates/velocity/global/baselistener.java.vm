@@ -1,0 +1,71 @@
+##$Id: listener.java.vm,v 1.1 2005/10/12 12:37:58 framiere Exp $
+#parse( "header.include.vm" )
+$codewriter.setCurrentJavaFilename($pkg, "BaseListener.java")
+package $pkg;
+
+import $pkg.*;
+
+/**
+ * No-op implementation of Listener as a convenience for implementing classes.
+ */
+public abstract class BaseListener<T extends DaoBean> implements Listener<T>
+{
+    /**
+     * Invoked just before inserting a record into the database.
+     *
+     * @param bean the bean that is about to be inserted
+     */
+    public void beforeInsert(T bean) {
+
+    }
+
+    /**
+     * Invoked just after a record is inserted in the database.
+     *
+     * @param bean the bean that was just inserted
+     */
+    public void afterInsert(T bean) {
+
+    }
+
+
+    /**
+     * Invoked just before updating a record in the database.
+     *
+     * @param bean the bean that is about to be updated
+     */
+    public void beforeUpdate(T bean) {
+
+    }
+
+
+    /**
+     * Invoked just after updating a record in the database.
+     *
+     * @param bean the bean that was just updated
+     */
+    public void afterUpdate(T bean) {
+
+    }
+
+
+    /**
+     * Invoked just before deleting a record in the database.
+     *
+     * @param bean the bean that is about to be deleted
+     */
+    public void beforeDelete(T bean) {
+
+    }
+
+
+    /**
+     * Invoked just after deleting a record in the database.
+     *
+     * @param bean the bean that was just deleted
+     */
+    public void afterDelete(T bean) {
+
+    }
+
+}

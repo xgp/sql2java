@@ -73,6 +73,26 @@ public class $managerClass extends BaseManager<$beanClass>
                             + ",#else"#end$column.getName()"#end;
 
     /**
+     * Contains all the full fields of the table.
+     */
+    protected String[] getFullFieldNames() { return FULL_FIELD_NAMES; }
+
+    /**
+     * Contains all the fields of the table.
+     */
+    protected String[] getFieldNames() { return FIELD_NAMES; }
+
+    /**
+     * Field that contains the comma separated fields of the table.
+     */
+    protected String getAllFullFields() { return ALL_FULL_FIELDS; }
+
+    /**
+     * Field that contains the comma separated fields of the table.
+     */
+    protected String getAllFields() { return ALL_FIELDS; }
+
+    /**
      * Constructor
      */
     public $managerClass(DataSource dataSource)
@@ -140,8 +160,8 @@ public class $managerClass extends BaseManager<$beanClass>
         try
         {
             c = getConnection();
-            StringBuffer sql = new StringBuffer("SELECT " + ALL_FIELDS + " FROM $tablename WHERE $sql");
-            if (log.isTraceEnabled()) log.trace("loadByPrimaryKey: " + sql);
+            StringBuilder sql = new StringBuilder("SELECT " + ALL_FIELDS + " FROM $tablename WHERE $sql");
+            if (log.isTraceEnabled()) log.trace("loadByPrimaryKey: {}", sql);
             ps = c.prepareStatement(sql.toString(),
                                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                                     ResultSet.CONCUR_READ_ONLY);
@@ -179,8 +199,8 @@ public class $managerClass extends BaseManager<$beanClass>
         try
         {
             c = getConnection();
-            StringBuffer sql = new StringBuffer("DELETE FROM $tablename WHERE $sql");
-            if (log.isTraceEnabled()) log.trace("loadByPrimaryKey: " + sql);
+            StringBuilder sql = new StringBuilder("DELETE FROM $tablename WHERE $sql");
+            if (log.isTraceEnabled()) log.trace("loadByPrimaryKey: {}", sql);
             ps = c.prepareStatement(sql.toString(),
                                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                                     ResultSet.CONCUR_READ_ONLY);
@@ -244,88 +264,6 @@ public class $managerClass extends BaseManager<$beanClass>
 #end
 #end
 
-    //////////////////////////////////////
-    // SQL 'WHERE' METHOD
-    //////////////////////////////////////
-    /**
-     * Retrieves a List of $beanClass given a sql where clause and a list of fields, and startRow and numRows.
-     * It is up to you to pass the 'WHERE' in your where clausis.
-     *
-     * @param where the sql 'where' clause
-     * @param startRow the start row to be used (first row = 1, last row = -1)
-     * @param numRows the number of rows to be retrieved (all rows = a negative number)
-     * @param fieldList table of the field's associated constants
-     * @return the resulting $beanClass table
-     */
-    //9
-    public List<$beanClass> loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException
-    {
-        String sql = null;
-        if(fieldList == null)
-            sql = "SELECT " + ALL_FIELDS + " FROM $tablename " + where;
-        else
-        {
-            StringBuffer buff = new StringBuffer(128);
-            buff.append("SELECT ");
-            for(int i = 0; i < fieldList.length; i++)
-            {
-                if(i != 0)
-                    buff.append(",");
-                buff.append(FIELD_NAMES[fieldList[i]]);
-            }
-            buff.append(" FROM $tablename ");
-            buff.append(where);
-            sql = buff.toString();
-            buff = null;
-        }
-        Connection c = null;
-        Statement st = null;
-        ResultSet rs =  null;
-        if (log.isTraceEnabled()) log.trace("loadByWhere: " + sql);
-        try
-        {
-            c = getConnection();
-            st = c.createStatement();
-            rs = st.executeQuery(sql);
-            return decodeResultSet(rs, fieldList, startRow, numRows);
-        }
-        finally
-        {
-            sql = null;
-            close(st, rs);
-            releaseConnection(c);
-        }
-    }
-
-    /**
-     * Deletes rows from the $tablename table using a 'where' clause.
-     * It is up to you to pass the 'WHERE' in your where clausis.
-     * <br>Attention, if 'WHERE' is omitted it will delete all records.
-     *
-     * @param where the sql 'where' clause
-     * @return the number of deleted rows
-     */
-    //11
-    public int deleteByWhere(String where) throws SQLException
-    {
-        Connection c = null;
-        PreparedStatement ps = null;
-
-        try
-        {
-            c = getConnection();
-            StringBuffer sql = new StringBuffer("DELETE FROM $tablename " + where);
-            if (log.isTraceEnabled()) log.trace("deleteByWhere: " + sql);
-            ps = c.prepareStatement(sql.toString());
-            return ps.executeUpdate();
-        }
-        finally
-        {
-            close(ps);
-            releaseConnection(c);
-        }
-    }
-
     //_____________________________________________________________________
     //
     // SAVE
@@ -350,7 +288,7 @@ public class $managerClass extends BaseManager<$beanClass>
 
         Connection c = null;
         PreparedStatement ps = null;
-        StringBuffer sql = null;
+        StringBuilder sql = null;
 
         try
         {
@@ -362,9 +300,8 @@ public class $managerClass extends BaseManager<$beanClass>
 #if ( $genKeyRetrieve == "before" && $primaryKeys.size() == 1 && $pKey.isColumnNumeric() )
             if (!bean.$strUtil.getModifiedMethod($pKey)())
             {
-                StringBuffer hint = new StringBuffer("$hint");
-                if (log.isTraceEnabled()) log.trace("generatedKey : " + hint);
-
+                StringBuilder hint = new StringBuilder("$hint");
+                if (log.isTraceEnabled()) log.trace("generatedKey : {}", hint);
                 ps = c.prepareStatement(hint.toString());
                 ResultSet rs = null;
                 try
@@ -373,7 +310,7 @@ public class $managerClass extends BaseManager<$beanClass>
                     if(rs.next())
                         bean.$strUtil.getSetMethod($pKey)($pKey.getResultSetMethodObject("1"));
                     else
-                        log("ATTENTION: Could not retrieve generated key!");
+                        log.warn("Could not retrieve generated key");
                 }
                 finally
                 {
@@ -390,7 +327,7 @@ public class $managerClass extends BaseManager<$beanClass>
         bean.$strUtil.getSetMethod($lockColumn)(new $lockColumn.getJavaType()(String.valueOf(System.curentTimeMillis())));
 
 #end
-            sql = new StringBuffer();
+            sql = new StringBuilder();
             if (delayed) sql.append("INSERT DELAYED into $tablename (");
             else sql.append("INSERT into $tablename (");
 
@@ -435,9 +372,7 @@ public class $managerClass extends BaseManager<$beanClass>
 #end
 
 	    }
-
-            if (log.isTraceEnabled()) log.trace("insert : " + sql.toString());
-
+            if (log.isTraceEnabled()) log.trace("insert : {}", sql);
             ps = c.prepareStatement(sql.toString(),
                                     $prestArgs);
 
@@ -461,7 +396,7 @@ public class $managerClass extends BaseManager<$beanClass>
                     if(rs.next()) {
                         bean.$strUtil.getSetMethod($pKey)($pKey.getResultSetMethodObject("1"));
                     } else {
-                        log("ATTENTION: Could not retrieve generated key!");
+                        log.warn("Could not retrieve generated key");
                     }
                 } finally {
                     close(ps2, rs);
@@ -475,7 +410,7 @@ public class $managerClass extends BaseManager<$beanClass>
                     if(rs.next())
                         bean.$strUtil.getSetMethod($pKey)($pKey.getResultSetMethodObject("1"));
                     else
-                        log("ATTENTION: Could not retrieve auto generated key!");
+                        log.warn("Could not retrieve auto generated key");
                 } finally {
                     close(rs);
                 }
@@ -515,7 +450,7 @@ public class $managerClass extends BaseManager<$beanClass>
 
         Connection c = null;
         PreparedStatement ps = null;
-        StringBuffer sql = null;
+        StringBuilder sql = null;
 
         try
         {
@@ -529,7 +464,7 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
             bean.$strUtil.getSetMethod($lockColumn))(new $lockColumn.getJavaType()(String.valueOf(System.currentTimeMillis())));
 
 #end
-            sql = new StringBuffer("UPDATE $tablename SET ");
+            sql = new StringBuilder("UPDATE $tablename SET ");
             boolean useComma=false;
 #foreach( $column in $columns )
 
@@ -558,7 +493,7 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
 #sqlAppend( "$lockColumn.getName()=?")
 #end
             sql.append("$sql");
-            if (log.isTraceEnabled()) log.trace("update : " + sql.toString());
+            if (log.isTraceEnabled()) log.trace("update : {}", sql);
             ps = c.prepareStatement(sql.toString(),
                                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                                     ResultSet.CONCUR_READ_ONLY);
@@ -593,59 +528,10 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
         }
     }
 
-
     //_____________________________________________________________________
     //
     // USING TEMPLATE
     //_____________________________________________________________________
-
-    /**
-     * Loads a List of $beanClass from a template one, given the start row and number of rows.
-     *
-     * @param bean the $beanClass template to look for
-     * @param startRow the start row to be used (first row = 1, last row=-1)
-     * @param numRows the number of rows to be retrieved (all rows = a negative number)
-     * @param searchType exact ?  like ? starting like ?
-     * @return all the $beanClass matching the template
-     */
-    //20
-    public List<$beanClass> loadUsingTemplate($beanClass bean, int startRow, int numRows, int searchType) throws SQLException
-    {
-        if (log.isTraceEnabled()) log.trace("loadUsingTemplate startRow:" + startRow + ", numRows:" + numRows + ", searchType:" + searchType);
-        Connection c = null;
-        PreparedStatement ps = null;
-        StringBuffer sql = new StringBuffer("SELECT " + ALL_FIELDS + " FROM $tablename ");
-        StringBuffer sqlWhere = new StringBuffer("");
-
-        try
-        {
-            if (fillWhere(sqlWhere, bean, searchType) == 0) {
-               if (log.isTraceEnabled()) log.trace("The bean to look is not initialized... loading all");
-            } else {
-                sql.append(" WHERE ").append(sqlWhere);
-            }
-            if (log.isTraceEnabled()) log.trace("loadUsingTemplate: " + sql.toString());
-
-            c = getConnection();
-            int scrollType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            if (startRow != 1)
-                scrollType = ResultSet.TYPE_SCROLL_SENSITIVE;
-            ps = c.prepareStatement(sql.toString(),
-                                    scrollType,
-                                    ResultSet.CONCUR_READ_ONLY);
-            fillPreparedStatement(ps, bean, searchType);
-
-            //ps.executeQuery();
-            return loadByPreparedStatement(ps, null, startRow, numRows);
-        }
-        finally
-        {
-            close(ps);
-            releaseConnection(c);
-            sql = null;
-            sqlWhere = null;
-        }
-    }
 
     /**
      * Deletes rows using a $beanClass template.
@@ -663,8 +549,8 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
 #end
         Connection c = null;
         PreparedStatement ps = null;
-        StringBuffer sql = new StringBuffer("DELETE FROM $tablename ");;
-        StringBuffer sqlWhere = new StringBuffer("");
+        StringBuilder sql = new StringBuilder("DELETE FROM $tablename ");;
+        StringBuilder sqlWhere = new StringBuilder("");
 
         try
         {
@@ -673,7 +559,7 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
             } else {
                 sql.append(" WHERE ").append(sqlWhere);
             }
-            if (log.isTraceEnabled()) log.trace("deleteUsingTemplate: " + sql.toString());
+            if (log.isTraceEnabled()) log.trace("deleteUsingTemplate: {}", sql);
 
             c = getConnection();
             ps = c.prepareStatement(sql.toString(),
@@ -693,137 +579,22 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
         }
     }
 
-
-    //_____________________________________________________________________
-    //
-    // COUNT
-    //_____________________________________________________________________
-
     /**
-     * Retrieves the number of rows of the table $tablename with a 'where' clause.
-     * It is up to you to pass the 'WHERE' in your where clausis.
-     *
-     * @param where the restriction clause
-     * @return the number of rows returned
-     */
-    //25
-    public int countWhere(String where) throws SQLException
-    {
-        String sql = "SELECT COUNT(*) AS MCOUNT FROM $tablename " + where;
-        if (log.isTraceEnabled()) log.trace("countWhere: " + sql);
-        Connection c = null;
-        Statement st = null;
-        ResultSet rs =  null;
-        try
-        {
-            int iReturn = -1;
-            c = getConnection();
-            st = c.createStatement();
-            rs =  st.executeQuery(sql);
-            if (rs.next())
-            {
-                iReturn = rs.getInt("MCOUNT");
-            }
-            if (iReturn != -1)
-                return iReturn;
-        }
-        finally
-        {
-            close(st, rs);
-            releaseConnection(c);
-            sql = null;
-        }
-       throw new SQLException("Error in countWhere");
-    }
-
-    /**
-     * Retrieves the number of rows of the table $tablename with a prepared statement.
-     *
-     * @param ps the PreparedStatement to be used
-     * @return the number of rows returned
-     */
-    //26
-    int countByPreparedStatement(PreparedStatement ps) throws SQLException
-    {
-        ResultSet rs =  null;
-        try
-        {
-            int iReturn = -1;
-            rs = ps.executeQuery();
-            if (rs.next())
-                iReturn = rs.getInt("MCOUNT");
-            if (iReturn != -1)
-                return iReturn;
-        }
-        finally
-        {
-            close(rs);
-        }
-       throw new SQLException("Error in countByPreparedStatement");
-    }
-
-    /**
-     * count the number of elements of a specific $beanClass bean given the start row and number of rows and the search type
-     *
-     * @param bean the $beanClass template to look for
-     * @param startRow the start row to be used (first row = 1, last row=-1)
-     * @param numRows the number of rows to be retrieved (all rows = a negative number)
-     * @param searchType exact ?  like ? starting like ?
-     * @return the number of rows returned
-     */
-    //20
-    public int countUsingTemplate($beanClass bean, int startRow, int numRows, int searchType) throws SQLException
-    {
-        Connection c = null;
-        PreparedStatement ps = null;
-        StringBuffer sql = new StringBuffer("SELECT COUNT(*) AS MCOUNT FROM $tablename");
-        StringBuffer sqlWhere = new StringBuffer("");
-
-        try
-        {
-            if (fillWhere(sqlWhere, bean, SEARCH_EXACT) == 0) {
-               if (log.isTraceEnabled()) log.trace("The bean to look is not initialized... counting all...");
-            } else {
-                sql.append(" WHERE ").append(sqlWhere);
-            }
-            if (log.isTraceEnabled()) log.trace("countUsingTemplate: " + sql.toString());
-
-            c = getConnection();
-            ps = c.prepareStatement(sql.toString(),
-                                    ResultSet.TYPE_SCROLL_INSENSITIVE,
-                                    ResultSet.CONCUR_READ_ONLY);
-            fillPreparedStatement(ps, bean, searchType);
-
-            return countByPreparedStatement(ps);
-        }
-        finally
-        {
-            close(ps);
-            releaseConnection(c);
-            sql = null;
-            sqlWhere = null;
-        }
-    }
-
-    //
-
-
-    /**
-     * fills the given stringbuffer with the sql where clausis constructed using the bean and the search type
-     * @param sqlWhere the stringbuffer that will be filled
+     * fills the given stringbuilder with the sql where clausis constructed using the bean and the search type
+     * @param sqlWhere the stringbuilder that will be filled
      * @param bean the bean to use for creating the where clausis
      * @param searchType exact ?  like ? starting like ?
      * @return the number of clausis returned
      */
-    protected int fillWhere(StringBuffer sqlWhere, $beanClass bean, int searchType) throws SQLException
+    protected int fillWhere(StringBuilder sqlWhere, $beanClass bean, int searchType) throws SQLException
     {
         if (bean == null)
             return 0;
         int _dirtyCount = 0;
-        StringBuffer sqlEqualsOperation = new StringBuffer("=");
-        StringBuffer sqlOperation = new StringBuffer("=");
+        StringBuilder sqlEqualsOperation = new StringBuilder("=");
+        StringBuilder sqlOperation = new StringBuilder("=");
         if (searchType != SEARCH_EXACT)
-            sqlOperation = new StringBuffer(" like ");
+            sqlOperation = new StringBuilder(" like ");
         try
         {
 #foreach( $column in $columns )
@@ -862,37 +633,30 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
 #if ($column.isString())
             switch (searchType){
                 case SEARCH_EXACT:
-                    if (log.isTraceEnabled()) log.trace("Setting for " + _dirtyCount + " [" + bean.$strUtil.getGetMethod($column)() + "]");
+                    if (log.isTraceEnabled()) log.trace("Setting for {} [{}]", _dirtyCount, bean.$strUtil.getGetMethod($column)());
                     $column.getPreparedStatementMethod("bean.$strUtil.getGetMethod($column)()", "++_dirtyCount");
                     break;
                 case SEARCH_LIKE:
-                    if (log.isTraceEnabled()) log.trace("Setting for " + _dirtyCount + " [%" + bean.$strUtil.getGetMethod($column)() + "%]");
+                    if (log.isTraceEnabled()) log.trace("Setting for {} [%{}%]", _dirtyCount, bean.$strUtil.getGetMethod($column)());
                     $column.getPreparedStatementMethod("${Q}%${Q} + bean.$strUtil.getGetMethod($column)() + ${Q}%${Q}", "++_dirtyCount");
                     break;
                 case SEARCH_STARTING_LIKE:
-                    if (log.isTraceEnabled()) log.trace("Setting for " + _dirtyCount + " [" + bean.$strUtil.getGetMethod($column)() + "%]");
+                    if (log.isTraceEnabled()) log.trace("Setting for {} [{}%]", _dirtyCount, bean.$strUtil.getGetMethod($column)());
                     $column.getPreparedStatementMethod("${Q}%${Q} + bean.$strUtil.getGetMethod($column)()", "++_dirtyCount");
                     break;
                 case SEARCH_ENDING_LIKE:
-                    if (log.isTraceEnabled()) log.trace("Setting for " + _dirtyCount + " [%" + bean.$strUtil.getGetMethod($column)() + "]");
+                    if (log.isTraceEnabled()) log.trace("Setting for {} [%{}]", _dirtyCount, bean.$strUtil.getGetMethod($column)());
                     $column.getPreparedStatementMethod("bean.$strUtil.getGetMethod($column)() + ${Q}%${Q}", "++_dirtyCount");
                     break;
                 }
 #else
-            if (log.isTraceEnabled()) log.trace("Setting for " + _dirtyCount + " [" + bean.$strUtil.getGetMethod($column)() + "]");
+            if (log.isTraceEnabled()) log.trace("Setting for {} [{}]", _dirtyCount, bean.$strUtil.getGetMethod($column)());
             $column.getPreparedStatementMethod("bean.$strUtil.getGetMethod($column)()", "++_dirtyCount");
 #end
         }
 #end
         return _dirtyCount;
     }
-
-
-    //_____________________________________________________________________
-    //
-    // DECODE RESULT SET
-    //_____________________________________________________________________
-
 
     /**
      * Transforms a ResultSet iterating on the $tablename on a $beanClass bean.
