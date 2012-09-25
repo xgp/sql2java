@@ -1,22 +1,24 @@
 # sql2java #
 
-This is a fork of an abandoned project on SourceForge by the same name <http://sql2java.sourceforge.net/>. It is heavily modified from the original version. I started using this around 2005 as a quick & dirty way to generate Java beans and data access managers from a SQL database. I still use it, as I have found many ORM tools like Hibernate to be unweildy and more trouble than they're worth. Other things that looks interesting to me these days are JDBI <http://jdbi.org/> which puts nice Java idioms on top of SQL and JDBC, ActiveJDBC <https://code.google.com/p/activejdbc/> which walks a nice line between JDBC and the active record pattern, and Ebean <http://www.avaje.org/> which is an ORM, but feels right.
+This is a fork of an abandoned project on SourceForge by the same name <http://sql2java.sourceforge.net/>. It is heavily modified from the original version. I started using this around 2005 as a quick & dirty way to generate Java beans and data access managers from a SQL database. I still use it, as I have found many ORM tools like Hibernate to be unweildy and more trouble than they're worth. Other things that look interesting to me these days are JDBI <http://jdbi.org/> which puts nice Java idioms on top of SQL and JDBC, ActiveJDBC <https://code.google.com/p/activejdbc/> which walks a nice line between JDBC and the active record pattern, and Ebean <http://www.avaje.org/> which is an ORM, but feels right.
 
 This differs from the original project in the following ways:
 - Build uses Maven. Packaged as a Maven plugin.
 - No more web widgets or factories. Just beans and managers.
 - *Managers return Lists instead of arrays.
 - Manager class is gone. BaseManager now takes a DataSource directly.
+- Generates a (SchemaName)Database.java factory with get*Manager() methods for all managers. Intended as an easy entry point to extend as your application's DAO.
 - Uses generics to make the code more concise (and requires Java 1.5)
 - Not sure if anything but MySQL and HSQL support works anymore. PostgreSQL did work a while ago, but haven't checked in a bit.
 
 To do in the future:
+- Allow interfaces in globals that don't relate to the schema (DaoManager, BaseManager, DaoBean) to be skipped so they can be elsewhere in the user's project or in an imported runtime library.
 - Add an interface for a cache providing a few convenience methods on top of a *Manager: T get(Id), List<T> get(List<Id>), List<T> get(Key)
 - Provide a optional runtime library with cache implementations. 
 - The CodeWriter and Database classes are messy and fragile. Port to use SchemaCrawler <http://schemacrawler.sourceforge.net/>
-- Generate a (SchemaName)Database.java factory with get*Manager() methods for all managers. This would be an easy entry point to extend as your applications DAO.
 - Transactions?
 - Do something with foreign key mappings that is sane against bad definitions?
+- Move the properties defined in the file into the Maven plugin definition. 
 
 ### Using: ###
 To try it out, copy src/test/config/test.properties into your project and edit to reflect your databases's properties.
@@ -56,7 +58,7 @@ There is a log at target/velocity.log that will tell you if anything failed, and
 The Velocity templates used by the code generator are in src/main/resources. If you add a new template, you must specify it in your properties file under mgrwriter.templates.perschema or mgrwriter.templates.pertable. 
 
 ### Dependencies: ###
-- Runtime dependencies for the generated code are slf4j <http://www.slf4j.org> for logging, and whatever JDBC driver you need for your database.
+Runtime dependencies for the generated code are slf4j <http://www.slf4j.org> for logging, and whatever JDBC driver you need for your database.
 
 ### Feedback: ###
 Please submit a pull request if you'd like to see something changed. 

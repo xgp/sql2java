@@ -23,8 +23,6 @@ public class CodeWriter
 {
     static protected Properties props;
 
-    public static String MGR_CLASS="Manager";
-
     protected static String dateClassName;
     protected static String timeClassName;
     protected static String timestampClassName;
@@ -278,16 +276,19 @@ public class CodeWriter
     	try {
 	    template = Velocity.getTemplate(templateName);
     	} catch (ResourceNotFoundException rnfe) {
+	    rnfe.printStackTrace();
 	    System.err.println( "Aborted writing component:" + templateName
 				+ (table!=null?(" for table:" + table.getName()):"")
 				+ " because Velocity could not find the resource." );
 	    return;
     	} catch (ParseErrorException pee) {
+	    pee.printStackTrace();
 	    System.err.println( "Aborted writing component:" + templateName
 				+ (table!=null?(" for table:" + table.getName()):"")
 				+ " because there was a parse error in the resource.\n" + pee.getLocalizedMessage() );
 	    return;
     	} catch (Exception e) {
+	    e.printStackTrace();
 	    System.err.println( "Aborted writing component:" + templateName
 				+ (table!=null?(" for table:" + table.getName()):"")
 				+ " there was an error initializing the template.\n" + e.getLocalizedMessage() );

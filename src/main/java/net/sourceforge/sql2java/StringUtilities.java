@@ -14,34 +14,27 @@ import java.io.*;
  *
  */
 public final class StringUtilities {
-	static private StringUtilities singleton = new StringUtilities();
 
-	// TODO: convert into velocity macros
-	static public final String PREFIX = "";
-	static public final String BASE_SUFFIX = "";
-	static public final String MANAGER_SUFFIX = "Manager";
-    //static public final String BEAN_SUFFIX = "Bean";
-	static public final String BEAN_SUFFIX = "";
-        static public final String RELATIONNAL_BEAN_SUFFIX = "Relationnal_Bean";
-        static public final String HIBERNATE_MANAGER_SUFFIX = "Hibernate_Manager";
-	static public final String ITERATOR_SUFFIX = "Iterator";
-	static public final String FACTORY_SUFFIX = "Factory";
-	static public final String COMPARATOR_SUFFIX = "Comparator";
-	static public final String HTTP_FACTORY_SUFFIX = "Http_Factory";
-	static public final String LISTENER_SUFFIX = "Listener";
-	static public final String RENDERER_SUFFIX = "Renderer";
-	static public final String EXCEPTION_SUFFIX = "Exception";
-	static public final String WIDGETFACTORY_SUFFIX = "Widget_Factory";
-	static public final String WIDGET_SUFFIX = "Widget";
+    static private StringUtilities singleton = new StringUtilities();
 
-	private StringUtilities () { }
+    // TODO: convert into velocity macros
+    static public final String PREFIX = "";
+    static public final String BASE_SUFFIX = "";
+    static public final String MANAGER_SUFFIX = "Manager";
+    static public final String BEAN_SUFFIX = "";
+    static public final String RELATIONNAL_BEAN_SUFFIX = "Relationnal_Bean";
+    static public final String ITERATOR_SUFFIX = "Iterator";
+    static public final String FACTORY_SUFFIX = "Factory";
+    static public final String EXCEPTION_SUFFIX = "Exception";
 
-	/** This is the default method for obtaining a StringUtilities instance.
-	 * @return The shared instance
-	 */
-	static public synchronized StringUtilities getInstance() {
-		return singleton;
-	}
+    private StringUtilities () { }
+
+    /** This is the default method for obtaining a StringUtilities instance.
+     * @return The shared instance
+     */
+    static public synchronized StringUtilities getInstance() {
+	return singleton;
+    }
 
     public String getPackageAsPath(String pkg){
         if (pkg == null)
@@ -57,8 +50,8 @@ public final class StringUtilities {
         return col.getPropertyTag();
     }
 
-	// TODO: convert into velocity macros
-	public String convertClass(String table, String type)
+    // TODO: convert into velocity macros
+    public String convertClass(String table, String type)
     {
         String suffix = "";
         String postfix = "";
@@ -109,46 +102,6 @@ public final class StringUtilities {
         return convertClass(table, FACTORY_SUFFIX);
     }
 
-    public String getHttpFactoryClass(Table table)
-    {
-        return convertClass(table.getName(), HTTP_FACTORY_SUFFIX);
-    }
-
-    public String getHttpFactoryClass(String table)
-    {
-        return convertClass(table, HTTP_FACTORY_SUFFIX);
-    }
-
-    public String getListenerClass(Table table)
-    {
-        return convertClass(table.getName(), LISTENER_SUFFIX);
-    }
-
-    public String getListenerClass(String table)
-    {
-        return convertClass(table, LISTENER_SUFFIX);
-    }
-
-    public String getRendererClass(Table table)
-    {
-        return convertClass(table.getName(), RENDERER_SUFFIX);
-    }
-
-    public String getRendererClass(String table)
-    {
-        return convertClass(table, RENDERER_SUFFIX);
-    }
-
-    public String getWidgetFactoryClass(Table table)
-    {
-        return convertClass(table.getName(), WIDGETFACTORY_SUFFIX);
-    }
-
-    public String getWidgetFactoryClass(String table)
-    {
-        return convertClass(table, WIDGETFACTORY_SUFFIX);
-    }
-
     public String getExceptionClass(Table table)
     {
         return convertClass(table.getName(), EXCEPTION_SUFFIX);
@@ -157,16 +110,6 @@ public final class StringUtilities {
     public String getExceptionClass(String table)
     {
         return convertClass(table, EXCEPTION_SUFFIX);
-    }
-
-    public String getWidgetClass(Table table)
-    {
-        return convertClass(table.getName(), WIDGET_SUFFIX);
-    }
-
-    public String getWidgetClass(String table)
-    {
-        return convertClass(table, WIDGET_SUFFIX);
     }
 
     public String getIteratorClass(Table table)
@@ -189,24 +132,16 @@ public final class StringUtilities {
         return convertClass(table, MANAGER_SUFFIX);
     }
 
-    public String getHibernateManagerClass(Table table)
+    public String getManagerObjectName(Table table)
     {
-        return convertClass(table.getName(), HIBERNATE_MANAGER_SUFFIX);
+        return getManagerObjectName(table.getName());
     }
 
-    public String getHibernateManagerClass(String table)
+    public String getManagerObjectName(String table)
     {
-        return convertClass(table, HIBERNATE_MANAGER_SUFFIX);
-    }
-
-    public String getComparatorClass(Table table)
-    {
-        return convertClass(table.getName(), COMPARATOR_SUFFIX);
-    }
-
-    public String getComparatorClass(String table)
-    {
-        return convertClass(table, COMPARATOR_SUFFIX);
+        String objName = convertClass(table, MANAGER_SUFFIX);
+	char f = Character.toLowerCase(objName.charAt(0));
+	return Character.toString(f)+objName.substring(1);
     }
 
     public String getStringConvertionMethod(Column col){
@@ -395,25 +330,25 @@ public final class StringUtilities {
 
     public String getJavaPrimaryType( Column c ) {
     	try {
-    		return c.getJavaPrimaryType();
+	    return c.getJavaPrimaryType();
     	} catch ( Exception e ) {
-    		return null;
+	    return null;
     	}
     }
 
-	public String convertName(String name) {
+    public String convertName(String name) {
         return convertName(name, false);
     }
 
-	public String convertName(Column col) {
+    public String convertName(Column col) {
         return convertName(col.getName(), false);
     }
 
-	public String convertName(Table table) {
+    public String convertName(Table table) {
         return convertName(table.getName(), false);
     }
 
-	/**
+    /**
      * Converts name into a more Java-ish style name.
      * @author netkernel
      * <br>
@@ -439,19 +374,19 @@ public final class StringUtilities {
         }
         return buffer.toString();
     }
-// ORIGINAL CONVERT STRING
-//     public static String convertName(String name, boolean wimpyCaps) {
-//         StringBuffer buffer = new StringBuffer(name.length());
-//         char list[] = name.toLowerCase().toCharArray();
-//         for(int i = 0; i < list.length; i++) {
-//             if(i == 0 && !wimpyCaps) {
-//                 buffer.append(Character.toUpperCase(list[i]));
-//             } else if(list[i] == '_' && (i+1) < list.length && i != 0) {
-//                 buffer.append(Character.toUpperCase(list[++i]));
-//             } else buffer.append(list[i]);
-//         }
-//         return buffer.toString();
-//     }
+    // ORIGINAL CONVERT STRING
+    //     public static String convertName(String name, boolean wimpyCaps) {
+    //         StringBuffer buffer = new StringBuffer(name.length());
+    //         char list[] = name.toLowerCase().toCharArray();
+    //         for(int i = 0; i < list.length; i++) {
+    //             if(i == 0 && !wimpyCaps) {
+    //                 buffer.append(Character.toUpperCase(list[i]));
+    //             } else if(list[i] == '_' && (i+1) < list.length && i != 0) {
+    //                 buffer.append(Character.toUpperCase(list[++i]));
+    //             } else buffer.append(list[i]);
+    //         }
+    //         return buffer.toString();
+    //     }
 
     private String escape(String s) {
         return isReserved(s) ? ("my_"+s) : s;

@@ -1,5 +1,7 @@
 ##$Id: header.include.vm,v 1.5 2005/10/10 20:11:47 framiere Exp $
 #set ( $db = $codewriter.db )
+#set ( $schema = $db.getSchema() )
+#set ( $tables = $db.getTables() )
 #set ( $allPackages     = $db.getAllPackages() )
 #set ( $widgetPkg       = "${pkg}.widget")
 #set ( $SPACE           = "    ")
