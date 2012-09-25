@@ -13,6 +13,9 @@ import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.FieldMethodizer;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.exception.*;
+import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+
 
 // this class is a mess, would need some brushing, however the generated code is clean and
 // that's what really matters
@@ -51,7 +54,7 @@ public class CodeWriter
     public CodeWriter (Database db, Properties props) {
     	try {
             this.db  = db;
-    		this.props = props;
+	    this.props = props;
 
             dateClassName = props.getProperty("jdbc2java.date", "java.sql.Date");
             timeClassName = props.getProperty("jdbc2java.time", "java.sql.Time");
@@ -72,15 +75,11 @@ public class CodeWriter
             optimisticLockType = props.getProperty("optimisticlock.type", "none");
             optimisticLockColumn = props.getProperty("optimisticlock.column");
 
-            if(basePackage == null)
-            {
-                throw new Exception("Missing property: mgrwriter.package");
-            }
-
+            if(basePackage == null) throw new Exception("Missing property: mgrwriter.package");
     	} catch (Exception e) {
-    		//knishikawa - maybe this needs better exception handling for the Velocity inits
-    		System.err.println("Threw an exception in the CodeWriter constructor:" + e.getMessage());
-    		e.printStackTrace();
+	    //knishikawa - maybe this needs better exception handling for the Velocity inits
+	    System.err.println("Threw an exception in the CodeWriter constructor:" + e.getMessage());
+	    e.printStackTrace();
     	}
     }
 
@@ -88,10 +87,7 @@ public class CodeWriter
     public void setDestinationFolder(String destDir) throws Exception
     {
         this.destDir = destDir;
-        if(destDir == null)
-        {
-            throw new Exception("Missing property: mgrwriter.destdir");
-        }
+        if(destDir == null) throw new Exception("Missing property: mgrwriter.destdir");
 
         File dir = new File(destDir);
         try {
@@ -100,29 +96,23 @@ public class CodeWriter
             // ignore
         }
 
-        if(!dir.isDirectory() || !dir.canWrite())
-        {
-            throw new Exception("Cannot write to: " + destDir);
-        }
+        if(!dir.isDirectory() || !dir.canWrite()) throw new Exception("Cannot write to: " + destDir);
     }
 
 
     private Hashtable setHash(String str)
     {
-        if(str == null || str.trim().equals(""))
+        if (str == null || str.trim().equals("")) {
             return new Hashtable();
-        else
-        {
-            Hashtable hash = new Hashtable();
-            StringTokenizer st = new StringTokenizer(str);
-            while(st.hasMoreTokens())
-            {
-                String val = st.nextToken().toLowerCase();
-                hash.put(val, val);
-            }
-
-            return hash;
-        }
+        } else {
+	    Hashtable hash = new Hashtable();
+	    StringTokenizer st = new StringTokenizer(str);
+	    while(st.hasMoreTokens()) {
+		String val = st.nextToken().toLowerCase();
+		hash.put(val, val);
+	    }
+	    return hash;
+	}
     }
 
     public boolean checkTable(Table table) throws Exception
@@ -130,44 +120,35 @@ public class CodeWriter
         System.out.println("    checking table " + table.getName() + " ...");
         boolean error = false;
         Column primaryKeys[] = table.getPrimaryKeys();
-        if (table.getColumns().length == 0)
-        {
-            System.err.println("        WARN : no column found !");
-            error = false;
-        }
-        if (primaryKeys.length == 0)
-        {
-            System.err.println("        WARN : No primary key is defined on table " + table.getName());
-            System.err.println("            Tables without primary key are not fully supported");
-            error = false;
-        }
-        else
-        {
-            if (primaryKeys.length > 1)
-            {
-                System.err.print("        WARN : Composite primary key ");
-                for (int ii = 0; ii < primaryKeys.length; ii++)
-                    System.err.print(primaryKeys[ii].getFullName() + ", ");
-                System.err.println();
-                System.err.println("            Tables with composite primary key are not fully supported");
-            }
-            else
-            {
-                Column pk = primaryKeys[0];
-                String pkName = pk.getName();
-                String normalKey = table.getName() + "_id";
-                if (pkName.equalsIgnoreCase(normalKey) == false)
-                {
-                    System.err.println("          WARN : primary key should of form <TABLE_NAME>_ID");
-                    System.err.println("              found " + pkName + " expected " + normalKey);
-                }
-                if (pk.isColumnNumeric() == false)
-                {
-                    System.err.println("          WARN : primary key should be an integer ");
-                    System.err.println("              found " + pk.getJavaType());
-                }
-            }
-        }
+        if (table.getColumns().length == 0) {
+	    System.err.println("        WARN : no column found !");
+	    error = false;
+	}
+        if (primaryKeys.length == 0) {
+	    System.err.println("        WARN : No primary key is defined on table " + table.getName());
+	    System.err.println("            Tables without primary key are not fully supported");
+	    error = false;
+	} else {
+	    if (primaryKeys.length > 1) {
+		System.err.print("        WARN : Composite primary key ");
+		for (int ii = 0; ii < primaryKeys.length; ii++)
+		    System.err.print(primaryKeys[ii].getFullName() + ", ");
+		System.err.println();
+		System.err.println("            Tables with composite primary key are not fully supported");
+	    } else {
+		Column pk = primaryKeys[0];
+		String pkName = pk.getName();
+		String normalKey = table.getName() + "_id";
+		if (pkName.equalsIgnoreCase(normalKey) == false) {
+		    System.err.println("          WARN : primary key should of form <TABLE_NAME>_ID");
+		    System.err.println("              found " + pkName + " expected " + normalKey);
+		}
+		if (pk.isColumnNumeric() == false) {
+		    System.err.println("          WARN : primary key should be an integer ");
+		    System.err.println("              found " + pk.getJavaType());
+		}
+	    }
+	}
         return error;
     }
 
@@ -176,45 +157,32 @@ public class CodeWriter
         System.out.println("Checking database tables");
         boolean error = false;
         Table tables[] = db.getTables();
-        for (int i = 0; i < tables.length; i++)
-        {
-        	if (includeHash.size() != 0)
-            {
-                if (includeHash.get(tables[i].getName().toLowerCase()) != null)
-                {
-                    if (excludeHash.get(tables[i].getName().toLowerCase()) == null)
-                    {
-                        boolean b = checkTable(tables[i]);
-                        if (b == true)
-                            error = true;
-                    }
-                }
-            }
-            else
-            {
-                if (excludeHash.size() != 0)
-                {
-                    if (excludeHash.get(tables[i].getName().toLowerCase()) == null)
-                    {
-                        boolean b = checkTable(tables[i]);
-                        if (b == true)
-                            error = true;
-                    }
-                }
-                else
-                {
-                    boolean b = checkTable(tables[i]);
-                    if (b == true)
-                        error = true;
-                }
-            }
-        }
-        if (error == true)
-        {
-            System.err.println("    Failed : at least one of the mandatory rule for sql2java is followed by your schema.");
-            System.err.println("    Please check the documentation for more information");
-            System.exit(-1);
-        }
+        for (int i = 0; i < tables.length; i++) {
+	    if (includeHash.size() != 0) {
+		if (includeHash.get(tables[i].getName().toLowerCase()) != null) {
+		    if (excludeHash.get(tables[i].getName().toLowerCase()) == null) {
+			boolean b = checkTable(tables[i]);
+			if (b == true)
+			    error = true;
+		    }
+		}
+	    } else {
+		if (excludeHash.size() != 0) {
+		    if (excludeHash.get(tables[i].getName().toLowerCase()) == null) {
+			boolean b = checkTable(tables[i]);
+			if (b == true) error = true;
+		    }
+		} else {
+		    boolean b = checkTable(tables[i]);
+		    if (b == true) error = true;
+		}
+	    }
+	}
+        if (error == true) {
+	    System.err.println("    Failed : at least one of the mandatory rule for sql2java is followed by your schema.");
+	    System.err.println("    Please check the documentation for more information");
+	    System.exit(-1);
+	}
         System.out.println("    Passed.");
     }
 
@@ -225,17 +193,23 @@ public class CodeWriter
     /** The entry point for generating code. */
     public synchronized void process() throws Exception
     {
-        if ("true".equalsIgnoreCase(Main.getProperty("check.database")))
+        if ("true".equalsIgnoreCase(props.getProperty("check.database")))
             checkDatabase();
 
-        if ("true".equalsIgnoreCase(Main.getProperty("check.only.database")))
+        if ("true".equalsIgnoreCase(props.getProperty("check.only.database")))
             return;
 
         // Init Velocity
         Properties vprops = new Properties();
 	vprops.put("runtime.log", "target/velocity.log");
-        vprops.put("file.resource.loader.path", getProperty("mgrwriter.templates.loadingpath",".") );
-
+	vprops.put(RuntimeConstants.RESOURCE_LOADER, "classpath");
+	vprops.put("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+	// for file and class
+	// vprops.put(RuntimeConstants.RESOURCE_LOADER, "file, classpath");
+	// vprops.put("file.resource.loader.class", FileResourceLoader.class.getName());
+	// vprops.put("file.resource.loader.path", getProperty("mgrwriter.templates.loadingpath",".") );
+	// vprops.put("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+	
         Velocity.init(vprops);
         vc = new VelocityContext();
         vc.put("CodeWriter", new FieldMethodizer( this ));
@@ -250,7 +224,7 @@ public class CodeWriter
         for(int i=0; i<schema_templates.length; i++) {
             writeComponent(schema_templates[i]);
         }
-        if ("true".equalsIgnoreCase(Main.getProperty("write.only.per.schema.templates")))
+        if ("true".equalsIgnoreCase(props.getProperty("write.only.per.schema.templates")))
             return;
 
         // Generate core and manager classes for all tables
@@ -265,7 +239,7 @@ public class CodeWriter
                 }
             } else if(excludeHash.size() != 0) {
                 if(excludeHash.get(tables[i].getName().toLowerCase()) == null) {
-	                if(includeHash.get(tables[i].getName().toLowerCase()) != null) {
+		    if(includeHash.get(tables[i].getName().toLowerCase()) != null) {
     	                writeTable(tables[i]);
     	            }
                 }
@@ -301,29 +275,24 @@ public class CodeWriter
 
     	//check the integrity of our velocity template
     	Template template = null;
-    	try
-        {
-    		template = Velocity.getTemplate(templateName);
+    	try {
+	    template = Velocity.getTemplate(templateName);
+    	} catch (ResourceNotFoundException rnfe) {
+	    System.err.println( "Aborted writing component:" + templateName
+				+ (table!=null?(" for table:" + table.getName()):"")
+				+ " because Velocity could not find the resource." );
+	    return;
+    	} catch (ParseErrorException pee) {
+	    System.err.println( "Aborted writing component:" + templateName
+				+ (table!=null?(" for table:" + table.getName()):"")
+				+ " because there was a parse error in the resource.\n" + pee.getLocalizedMessage() );
+	    return;
+    	} catch (Exception e) {
+	    System.err.println( "Aborted writing component:" + templateName
+				+ (table!=null?(" for table:" + table.getName()):"")
+				+ " there was an error initializing the template.\n" + e.getLocalizedMessage() );
+	    return;
     	}
-        catch (ResourceNotFoundException rnfe) {
-    		System.err.println( "Aborted writing component:" + templateName
-    				          + (table!=null?(" for table:" + table.getName()):"")
-							  + " because Velocity could not find the resource." );
-    		return;
-    	}
-        catch (ParseErrorException pee) {
-    		System.err.println( "Aborted writing component:" + templateName
-			          + (table!=null?(" for table:" + table.getName()):"")
-					  + " because there was a parse error in the resource.\n" + pee.getLocalizedMessage() );
-    		return;
-    	}
-        catch (Exception e) {
-    		System.err.println( "Aborted writing component:" + templateName
-			          + (table!=null?(" for table:" + table.getName()):"")
-					  + " there was an error initializing the template.\n" + e.getLocalizedMessage() );
-    		return;
-    	}
-
 
         // dummy process the template
         StringWriter sw = new StringWriter();
@@ -352,13 +321,13 @@ public class CodeWriter
     public void setCurrentFilename(String relpath_or_package, String fn) throws Exception {
         current_filename = relpath_or_package.replace('.', File.separatorChar) + File.separatorChar + fn;
         current_fullfilename = destDir + File.separatorChar +
-        relpath_or_package.replace('.', File.separatorChar) + File.separatorChar + fn;
+	    relpath_or_package.replace('.', File.separatorChar) + File.separatorChar + fn;
         UserCodeParser uc = new UserCodeParser(current_fullfilename);
         current_vc.put("userCode", uc);
     }
 
     public void setCurrentJavaFilename(String relpath_or_package, String fn) throws Exception {
-            setCurrentFilename("java" + File.separatorChar + relpath_or_package, fn);
+	setCurrentFilename(relpath_or_package, fn);
     }
 
 
@@ -469,8 +438,8 @@ public class CodeWriter
     public Column getLockColumn(Collection cols) {
         Iterator iter = cols.iterator();
         while ( iter.hasNext() ) {
-        	Column col = (Column)iter.next();
-        	if ( col.getName().equalsIgnoreCase( optimisticLockColumn ) ) return col;
+	    Column col = (Column)iter.next();
+	    if ( col.getName().equalsIgnoreCase( optimisticLockColumn ) ) return col;
         }
         return null;
     }
@@ -484,9 +453,9 @@ public class CodeWriter
     public boolean listContainsString( List list, String string ) {
     	Object obj = null;
     	for ( Iterator iter = list.iterator();
-    		  iter.hasNext();
-    		  obj = iter.next() ) {
-    		if ( string.equals(obj) ) return true;
+	      iter.hasNext();
+	      obj = iter.next() ) {
+	    if ( string.equals(obj) ) return true;
     	}
     	return false;
     }
@@ -536,4 +505,5 @@ public class CodeWriter
 
         return (String[])al.toArray(new String[al.size()]);
     }
+
 }

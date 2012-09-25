@@ -153,14 +153,12 @@ public class $managerClass extends BaseManager<$beanClass>
      * @return a unique $beanClass
      */
     //1
-    public $beanClass loadByPrimaryKey($keys) throws SQLException
-    {
+    public $beanClass loadByPrimaryKey($keys) throws SQLException {
         Connection c = null;
         PreparedStatement ps = null;
-        try
-        {
+        try {
             c = getConnection();
-            StringBuilder sql = new StringBuilder("SELECT " + ALL_FIELDS + " FROM $tablename WHERE $sql");
+            StringBuilder sql = new StringBuilder("SELECT ").append(ALL_FIELDS).append(" FROM $tablename WHERE $sql");
             if (log.isTraceEnabled()) log.trace("loadByPrimaryKey: {}", sql);
             ps = c.prepareStatement(sql.toString(),
                                     ResultSet.TYPE_SCROLL_INSENSITIVE,
@@ -169,13 +167,9 @@ public class $managerClass extends BaseManager<$beanClass>
             $pk.getPreparedStatementMethod($strUtil.getVarName($pk), $velocityCount)
 #end
             List<$beanClass> pReturn = loadByPreparedStatement(ps);
-            if (pReturn.size() < 1)
-                return null;
-            else
-                return pReturn.get(0);
-        }
-        finally
-        {
+            if (pReturn.size() < 1) return null;
+            else return pReturn.get(0);
+        } finally {
             close(ps);
             releaseConnection(c);
         }
@@ -192,12 +186,10 @@ public class $managerClass extends BaseManager<$beanClass>
      * @return the number of deleted rows
      */
     //2
-    public int deleteByPrimaryKey($keys) throws SQLException
-    {
+    public int deleteByPrimaryKey($keys) throws SQLException {
         Connection c = null;
         PreparedStatement ps = null;
-        try
-        {
+        try {
             c = getConnection();
             StringBuilder sql = new StringBuilder("DELETE FROM $tablename WHERE $sql");
             if (log.isTraceEnabled()) log.trace("loadByPrimaryKey: {}", sql);
@@ -208,9 +200,7 @@ public class $managerClass extends BaseManager<$beanClass>
             $pk.getPreparedStatementMethod($strUtil.getVarName($pk), $velocityCount)
 #end
             return ps.executeUpdate();
-        }
-        finally
-        {
+        } finally {
             close(ps);
             releaseConnection(c);
         }
@@ -240,8 +230,7 @@ public class $managerClass extends BaseManager<$beanClass>
      * @return the associated $importedClass bean
      */
     //3 GET IMPORTED
-    public $importedClass[] get${importedClass}s($beanClass bean) throws SQLException
-    {
+    public $importedClass[] get${importedClass}s($beanClass bean) throws SQLException {
         $importedClass other = ${importedClassManager}.getInstance().create${importedClass}();
         other.${strUtil.getSetMethod($impKey.getForeignColumn())}(bean.${strUtil.getGetMethod($impKey)}());
         return ${importedClassManager}.getInstance().loadUsingTemplate(other);
@@ -276,8 +265,7 @@ public class $managerClass extends BaseManager<$beanClass>
      * @param delayed use INSERT DELAYED and don't get generated keys
      */
     //13
-    public $beanClass insert($beanClass bean, boolean orUpdate, boolean delayed) throws SQLException
-    {
+    public $beanClass insert($beanClass bean, boolean orUpdate, boolean delayed) throws SQLException {
         // mini checks
         if (!bean.isModified()) {
             return bean; // should not we log something ?
@@ -285,35 +273,28 @@ public class $managerClass extends BaseManager<$beanClass>
         if (!bean.isNew()){
             return update(bean);
         }
-
         Connection c = null;
         PreparedStatement ps = null;
         StringBuilder sql = null;
-
-        try
-        {
+        try {
             c = getConnection();
 ##-------------writePreInsert
 #set( $genKeyRetrieve = $codewriter.getProperty("generatedkey.retrieve", "") )
 #set ( $hint = $codewriter.getProperty("generatedkey.statement").replaceAll("<TABLE>", $tablename) )
 #if ( $primaryKeys.size() > 0 )#set ( $pKey = $primaryKeys.get(0) )#end
 #if ( $genKeyRetrieve == "before" && $primaryKeys.size() == 1 && $pKey.isColumnNumeric() )
-            if (!bean.$strUtil.getModifiedMethod($pKey)())
-            {
+            if (!bean.$strUtil.getModifiedMethod($pKey)()) {
                 StringBuilder hint = new StringBuilder("$hint");
                 if (log.isTraceEnabled()) log.trace("generatedKey : {}", hint);
                 ps = c.prepareStatement(hint.toString());
                 ResultSet rs = null;
-                try
-                {
+                try {
                     rs = ps.executeQuery();
                     if(rs.next())
                         bean.$strUtil.getSetMethod($pKey)($pKey.getResultSetMethodObject("1"));
                     else
                         log.warn("Could not retrieve generated key");
-                }
-                finally
-                {
+                } finally {
                     close(ps, rs);
                     ps=null;
                 }
@@ -386,8 +367,7 @@ public class $managerClass extends BaseManager<$beanClass>
 #set ( $hint = $codewriter.getProperty("generatedkey.statement").replaceAll("<TABLE>", $tablename) )
 #if ( $genKeyRetrieve == "after" )
 
-            if (!bean.$strUtil.getModifiedMethod($pKey)())
-            {
+            if (!bean.$strUtil.getModifiedMethod($pKey)()) {
                 PreparedStatement ps2 = null;
                 ResultSet rs = null;
                 try {
@@ -403,8 +383,7 @@ public class $managerClass extends BaseManager<$beanClass>
                 }
             }
 #elseif ( $genKeyRetrieve == "auto" )
-            if (!bean.$strUtil.getModifiedMethod($pKey)() && !delayed)
-            {
+            if (!bean.$strUtil.getModifiedMethod($pKey)() && !delayed) {
                 ResultSet rs = ps.getGeneratedKeys();
                 try {
                     if(rs.next())
@@ -423,10 +402,7 @@ public class $managerClass extends BaseManager<$beanClass>
             bean.isNew(false);
             bean.resetIsModified();
             return bean;
-        }
-        finally
-        {
-            sql = null;
+        } finally {
             close(ps);
             releaseConnection(c);
         }
@@ -438,8 +414,7 @@ public class $managerClass extends BaseManager<$beanClass>
      * @param bean the $beanClass bean to be updated
      */
     //14
-    public $beanClass update($beanClass bean) throws SQLException
-    {
+    public $beanClass update($beanClass bean) throws SQLException {
         // mini checks
         if (!bean.isModified()) {
             return bean; // should not we log something ?
@@ -447,13 +422,10 @@ public class $managerClass extends BaseManager<$beanClass>
         if (bean.isNew()){
             return save(bean);
         }
-
         Connection c = null;
         PreparedStatement ps = null;
         StringBuilder sql = null;
-
-        try
-        {
+        try {
             c = getConnection();
 
 #if ( $primaryKeys.size() == 0 )
@@ -519,10 +491,7 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
             bean.resetIsModified();
 
             return bean;
-        }
-        finally
-        {
-            sql = null;
+        } finally {
             close(ps);
             releaseConnection(c);
         }
@@ -540,8 +509,7 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
      * @return the number of deleted objects
      */
     //21
-    public int deleteUsingTemplate($beanClass bean) throws SQLException
-    {
+    public int deleteUsingTemplate($beanClass bean) throws SQLException {
 #if ( $primaryKeys.size() == 1)
         if (bean.$strUtil.getInitializedMethod($primaryKeys.get(0))())
             return deleteByPrimaryKey(bean.$strUtil.getGetMethod($primaryKeys.get(0))());
@@ -552,8 +520,7 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
         StringBuilder sql = new StringBuilder("DELETE FROM $tablename ");;
         StringBuilder sqlWhere = new StringBuilder("");
 
-        try
-        {
+        try {
             if (fillWhere(sqlWhere, bean, SEARCH_EXACT) == 0) {
                if (log.isTraceEnabled()) log.trace("The bean to look is not initialized... deleting all");
             } else {
@@ -569,13 +536,9 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
 
             int _rows = ps.executeUpdate();
             return _rows;
-        }
-        finally
-        {
+        } finally {
             close(ps);
             releaseConnection(c);
-            sql = null;
-            sqlWhere = null;
         }
     }
 
@@ -586,8 +549,7 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
      * @param searchType exact ?  like ? starting like ?
      * @return the number of clausis returned
      */
-    protected int fillWhere(StringBuilder sqlWhere, $beanClass bean, int searchType) throws SQLException
-    {
+    protected int fillWhere(StringBuilder sqlWhere, $beanClass bean, int searchType) throws SQLException {
         if (bean == null)
             return 0;
         int _dirtyCount = 0;
@@ -595,24 +557,16 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
         StringBuilder sqlOperation = new StringBuilder("=");
         if (searchType != SEARCH_EXACT)
             sqlOperation = new StringBuilder(" like ");
-        try
-        {
 #foreach( $column in $columns )
-            if (bean.$strUtil.getModifiedMethod($column)()) {
-                _dirtyCount ++;
+        if (bean.$strUtil.getModifiedMethod($column)()) {
+            _dirtyCount ++;
 #if ($column.isString())
-                sqlWhere.append((sqlWhere.length() == 0) ? " " : " AND ").append("$column.getName() ").append(sqlOperation).append("?");
+            sqlWhere.append((sqlWhere.length() == 0) ? " " : " AND ").append("$column.getName() ").append(sqlOperation).append("?");
 #else
-                sqlWhere.append((sqlWhere.length() == 0) ? " " : " AND ").append("$column.getName() ").append(sqlEqualsOperation).append("?");
-#end
-            }
+            sqlWhere.append((sqlWhere.length() == 0) ? " " : " AND ").append("$column.getName() ").append(sqlEqualsOperation).append("?");
 #end
         }
-        finally
-        {
-            sqlEqualsOperation = null;
-            sqlOperation = null;
-        }
+#end
         return _dirtyCount;
     }
 
@@ -623,8 +577,7 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
      * @param searchType exact ?  like ? starting like ?
      * @return the number of clausis returned
      */
-    protected int fillPreparedStatement(PreparedStatement ps, $beanClass bean, int searchType) throws SQLException
-    {
+    protected int fillPreparedStatement(PreparedStatement ps, $beanClass bean, int searchType) throws SQLException {
         if (bean == null)
             return 0;
         int _dirtyCount = 0;
@@ -664,49 +617,15 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
      * @param rs the ResultSet to be transformed
      * @return bean resulting $beanClass bean
      */
-    //29
-    public $beanClass decodeRow(ResultSet rs) throws SQLException
-    {
+    public $beanClass decodeRow(ResultSet rs) throws SQLException {
         $beanClass bean = create$beanClass();
 ## the set statement casts $velocityCount to a string
 #foreach ( $column in $columns )
 #set ($vCount = "$velocityCount" )
         bean.$strUtil.getSetMethod($column)($column.getResultSetMethodObject($vCount));
 #end
-
         bean.isNew(false);
         bean.resetIsModified();
-
-        return bean;
-    }
-
-    /**
-     * Transforms a ResultSet iterating on the $tablename table on a $beanClass bean according to a list of fields.
-     *
-     * @param rs the ResultSet to be transformed
-     * @param fieldList table of the field's associated constants
-     * @return bean resulting $beanClass bean
-     */
-    //30
-    public $beanClass decodeRow(ResultSet rs, int[] fieldList) throws SQLException
-    {
-        $beanClass bean = create$beanClass();
-        int pos = 0;
-        for(int i = 0; i < fieldList.length; i++)
-        {
-            switch(fieldList[i])
-            {
-#foreach( $column in $columns )
-                case ID_$column.getConstName():
-                    ++pos;
-                    bean.$strUtil.getSetMethod($column)($column.getResultSetMethodObject("pos"));
-                    break;
-#end
-            }
-        }
-        bean.isNew(false);
-        bean.resetIsModified();
-
         return bean;
     }
 
@@ -716,17 +635,13 @@ $codewriter.log("    WARN : $tablename does not have any primary key...")
      * @param rs the ResultSet to be transformed
      * @return bean resulting $beanClass bean
      */
-    //31
-    public $beanClass metaDataDecodeRow(ResultSet rs) throws SQLException
-    {
+    public $beanClass metaDataDecodeRow(ResultSet rs) throws SQLException {
         $beanClass bean = create$beanClass();
 #foreach ( $column in $columns )
         bean.$strUtil.getSetMethod($column)($column.getResultSetMethodObject("${Q}$column.getName()${Q}"));
 #end
-
         bean.isNew(false);
         bean.resetIsModified();
-
         return bean;
     }
 

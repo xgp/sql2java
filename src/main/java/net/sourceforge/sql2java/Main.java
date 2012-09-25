@@ -28,7 +28,7 @@ public class Main {
     {
         // Check for required argument
         if(argv == null || argv.length < 1) {
-            System.err.println("Usage: java com.netkernel.sql2java.Main <properties filename>");
+            System.err.println("Usage: java net.sourceforge.sql2java.Main <properties filename>");
             System.exit(1);
         }
 

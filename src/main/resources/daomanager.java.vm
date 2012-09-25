@@ -20,11 +20,13 @@ public interface DaoManager<T>
     public List<T> loadAll() throws SQLException;
     public List<T> loadAll(int startRow, int numRows) throws SQLException;
     public List<T> loadByWhere(String where) throws SQLException;
-    public List<T> loadByWhere(String where, int[] fieldList) throws SQLException;
-    public List<T> loadByWhere(String where, int[] fieldList, int startRow, int numRows) throws SQLException;
+    public List<T> loadByWhere(String where, Object... fields) throws SQLException;
+    public List<T> loadByWhere(String where, int startRow, int numRows) throws SQLException;
     public T loadUniqueByWhere(String where) throws SQLException;
+    public T loadUniqueByWhere(String where, Object... fields) throws SQLException;
     public int deleteAll() throws SQLException;
     public int deleteByWhere(String where) throws SQLException;
+    public int deleteByWhere(String where, Object... fields) throws SQLException;
     public T save(T bean) throws SQLException;
     public T insert(T bean) throws SQLException;
     public T insert(T bean, boolean orUpdate) throws SQLException;
@@ -40,14 +42,13 @@ public interface DaoManager<T>
     public int deleteUsingTemplate(T bean) throws SQLException;
     public int countAll() throws SQLException;
     public int countWhere(String where) throws SQLException;
+    public int countWhere(String where, Object... fields) throws SQLException;
     public int countUsingTemplate(T bean) throws SQLException;
     public int countUsingTemplate(T bean, int startRow, int numRows) throws SQLException;
     public int countUsingTemplate(T bean, int startRow, int numRows, int searchType) throws SQLException;
-    public List<T> decodeResultSet(ResultSet rs, int[] fieldList, int startRow, int numRows) throws SQLException;
+    public List<T> decodeResultSet(ResultSet rs, int startRow, int numRows) throws SQLException;
     public T decodeRow(ResultSet rs) throws SQLException;
-    public T decodeRow(ResultSet rs, int[] fieldList) throws SQLException;
     public T metaDataDecodeRow(ResultSet rs) throws SQLException;
     public List<T> loadByPreparedStatement(PreparedStatement ps) throws SQLException;
-    public List<T> loadByPreparedStatement(PreparedStatement ps, int[] fieldList) throws SQLException;
-    public List<T> loadByPreparedStatement(PreparedStatement ps, int[] fieldList, int startRow, int numRows) throws SQLException;
+    public List<T> loadByPreparedStatement(PreparedStatement ps, int startRow, int numRows) throws SQLException;
 }
