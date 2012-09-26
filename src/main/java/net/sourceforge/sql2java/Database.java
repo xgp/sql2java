@@ -96,7 +96,8 @@ public class Database
         loadTables();
         loadColumns();
         loadPrimaryKeys();
-        // loadImportedKeys();
+	
+	// loadImportedKeys();
         // loadManyToMany();
 //		loadIndexes(); // experimental
     }

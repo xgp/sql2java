@@ -7,9 +7,10 @@ package $pkg;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 /**
  * ${className}Database is a mapping of the $schema schema.
-*/
+ */
 public class ${className}Database {
 
     public ${className}Database(DataSource dataSource) {

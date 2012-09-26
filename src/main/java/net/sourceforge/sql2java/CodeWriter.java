@@ -249,9 +249,15 @@ public class CodeWriter
 
     private void writeTable(Table table) throws Exception
     {
-        if (table.getColumns().length == 0) {
+	Column[] cs = table.getColumns();
+        if (cs.length == 0) {
             return;
-        }
+        } else {
+	    // System.out.println("Writing files for table "+table.getName());
+	    // for (Column c:cs) {
+	    // 	System.out.println(c.toString());
+	    // }
+	}
         current_vc = new VelocityContext(vc);
         this.table = table;
         current_vc.put("table", table);

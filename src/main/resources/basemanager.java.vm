@@ -299,9 +299,9 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     public abstract T insert(T bean, boolean orUpdate, boolean delayed) throws SQLException;
 
     /**
-     * Update the $beanClass bean record in the database according to the changes.
+     * Update the bean record in the database according to the changes.
      *
-     * @param bean the $beanClass bean to be updated
+     * @param bean the bean to be updated
      */
     public abstract T update(T bean) throws SQLException;
 
