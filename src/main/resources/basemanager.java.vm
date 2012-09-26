@@ -121,7 +121,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @return the resulting bean
      */
     public List<T> loadByWhere(String where) throws SQLException {
-        return loadByWhere(where, null, 1, -1);
+        return loadByWhere(where, 1, -1);
     }
 
     /**
