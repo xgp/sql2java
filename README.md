@@ -18,7 +18,7 @@ To do in the future:
 - The CodeWriter and Database classes are messy and fragile. Port to use SchemaCrawler <http://schemacrawler.sourceforge.net/>
 - Transactions?
 - Do something with foreign key mappings that is sane against bad definitions?
-- Move the properties defined in the file into the Maven plugin definition. 
+- Move the properties defined in the file into the Maven plugin definition. Allow a list of tables to be specified for generation.
 
 ### Using: ###
 To try it out, copy src/test/config/test.properties into your project and edit to reflect your databases's properties.

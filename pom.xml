@@ -9,6 +9,13 @@
   <name>sql2java-maven-plugin</name>
 
   <build>
+    <extensions>
+      <extension>
+	<groupId>org.apache.maven.wagon</groupId>
+	<artifactId>wagon-webdav</artifactId>
+	<version>1.0-beta-2</version>
+      </extension>
+    </extensions>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -52,9 +59,6 @@
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
       <version>[5.1,)</version>
-<!--
-      <version>3.0.10</version>
--->
       <scope>runtime</scope>
     </dependency>
     <dependency>

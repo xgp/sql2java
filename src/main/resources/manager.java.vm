@@ -290,10 +290,12 @@ public class $managerClass extends BaseManager<$beanClass>
                 ResultSet rs = null;
                 try {
                     rs = ps.executeQuery();
-                    if(rs.next())
+                    if(rs.next()) {
                         bean.$strUtil.getSetMethod($pKey)($pKey.getResultSetMethodObject("1"));
-                    else
-                        log.warn("Could not retrieve generated key");
+                    } else {
+                        if (delayed || orUpdate) log.trace("Could not retrieve generated key");
+                        else log.warn("Could not retrieve generated key");
+                    }
                 } finally {
                     close(ps, rs);
                     ps=null;
@@ -376,7 +378,8 @@ public class $managerClass extends BaseManager<$beanClass>
                     if(rs.next()) {
                         bean.$strUtil.getSetMethod($pKey)($pKey.getResultSetMethodObject("1"));
                     } else {
-                        log.warn("Could not retrieve generated key");
+                        if (delayed || orUpdate) log.trace("Could not retrieve generated key");
+                        else log.warn("Could not retrieve generated key");
                     }
                 } finally {
                     close(ps2, rs);
@@ -386,10 +389,12 @@ public class $managerClass extends BaseManager<$beanClass>
             if (!bean.$strUtil.getModifiedMethod($pKey)() && !delayed) {
                 ResultSet rs = ps.getGeneratedKeys();
                 try {
-                    if(rs.next())
+                    if(rs.next()) {
                         bean.$strUtil.getSetMethod($pKey)($pKey.getResultSetMethodObject("1"));
-                    else
-                        log.warn("Could not retrieve auto generated key");
+                    } else {
+                        if (delayed || orUpdate) log.trace("Could not retrieve generated key");
+                        else log.warn("Could not retrieve generated key");
+                    }
                 } finally {
                     close(rs);
                 }
