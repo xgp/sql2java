@@ -3,12 +3,22 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.sourceforge</groupId>
-  <artifactId>sql2java-maven-plugin</artifactId>
-  <packaging>maven-plugin</packaging>
+  <artifactId>sql2java</artifactId>
+  <packaging>pom</packaging>
   <version>1.0-SNAPSHOT</version>
-  <name>sql2java-maven-plugin</name>
+  <name>sql2java</name>
+
+  <prerequisites>
+    <maven>2.2.1</maven>
+  </prerequisites>
+
+  <modules>
+    <module>sql2java-lib</module>
+    <module>sql2java-maven-plugin</module>
+  </modules>
 
   <build>
+    <defaultGoal>install</defaultGoal>
     <extensions>
       <extension>
 	<groupId>org.apache.maven.wagon</groupId>
@@ -19,8 +29,9 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.0.2</version>
+	<version>2.5.1</version>
         <configuration>
+          <debug>true</debug>
           <source>1.5</source>
           <target>1.5</target>
         </configuration>
@@ -30,52 +41,17 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.ant</groupId>
-      <artifactId>ant</artifactId>
-      <version>[1.7.0,)</version>
-    </dependency>
-    <dependency>
-      <groupId>java2html</groupId>
-      <artifactId>j2h</artifactId>
-      <version>[1.2,)</version>
-    </dependency>
-    <dependency>
-      <groupId>velocity</groupId>
-      <artifactId>velocity</artifactId>
-      <version>1.5</version>
-    </dependency>
-    <dependency>
-      <groupId>velocity</groupId>
-      <artifactId>velocity-dep</artifactId>
-      <version>1.4</version>
-    </dependency>
-    <dependency>
-      <groupId>hsqldb</groupId>
-      <artifactId>hsqldb</artifactId>
-      <version>1.8.0.10</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-      <version>[5.1,)</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-plugin-api</artifactId>
-      <version>2.0</version>
-    </dependency>
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <junit.version>[4.0,)</junit.version>
+    <slf4j.version>[1.5.0,)</slf4j.version>
   </properties>
 
 </project>
