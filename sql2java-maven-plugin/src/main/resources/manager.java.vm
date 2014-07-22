@@ -18,6 +18,9 @@ import org.slf4j.LoggerFactory;
 #foreach ($linkedPackage in $linkedPackages)
 import ${linkedPackage}.*;
 #end
+#if ($useLib)
+import $libPath.*;
+#end
 
 /**
  * Handles database calls (save, load, count, etc...) for the $tablename table.

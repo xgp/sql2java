@@ -41,6 +41,9 @@ public class CodeWriter
     public Table table;
     protected VelocityContext current_vc;
 
+    protected boolean useLibrary = false;
+    protected String libraryPackage;
+
     ///////////////////////////////////////////////////////
     // CODE WRITER INIT
     ///////////////////////////////////////////////////////
@@ -81,6 +84,10 @@ public class CodeWriter
     	}
     }
 
+    public void setUseLibrary(String libraryPackage) {
+	this.useLibrary = true;
+	this.libraryPackage = libraryPackage;
+    }
 
     public void setDestinationFolder(String destDir) throws Exception
     {
@@ -214,14 +221,18 @@ public class CodeWriter
         vc.put("codewriter", this );
         vc.put("pkg", basePackage);
         vc.put("pkgPath", basePackage.replace('.', '/'));
+	vc.put("useLib", useLibrary);
+	vc.put("libPath", libraryPackage);
         vc.put("strUtil", StringUtilities.getInstance());
         current_vc = new VelocityContext(vc);
 
         System.out.println("Generation in folder " + destDir + " ...");
         String[] schema_templates = getPropertyExploded("mgrwriter.templates.perschema");
-        for(int i=0; i<schema_templates.length; i++) {
-            writeComponent(schema_templates[i]);
-        }
+	if (!useLibrary) {
+	    for(int i=0; i<schema_templates.length; i++) {
+		writeComponent(schema_templates[i]);
+	    }
+	}
         if ("true".equalsIgnoreCase(props.getProperty("write.only.per.schema.templates")))
             return;
 

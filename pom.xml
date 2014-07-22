@@ -15,6 +15,7 @@
   <modules>
     <module>sql2java-lib</module>
     <module>sql2java-maven-plugin</module>
+    <module>sql2java-test</module>
   </modules>
 
   <build>

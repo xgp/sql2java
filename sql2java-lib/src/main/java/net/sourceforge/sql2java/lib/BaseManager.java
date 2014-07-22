@@ -675,7 +675,15 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @return an auto commit connection
      */
     public Connection getConnection() throws SQLException {
-	return dataSource.getConnection();
+	Txn transaction = Database.currentTransaction();
+	if (transaction == null) {
+	    return dataSource.getConnection();
+	} else {
+	    try {
+		transaction.setDataSource(this.dataSource);
+	    } catch (Exception ignore) {}
+	    return transaction.getConnection();
+	}
     }
 
     /**
@@ -684,10 +692,13 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     public void releaseConnection(Connection c)
     {
 	if (c != null) {
-	    try {
-		c.close();
-	    } catch (Exception e) {
-		log.warn("Error releasing connection", e);
+	    Txn transaction = Database.currentTransaction();
+	    if (transaction == null) {
+		try {
+		    c.close();
+		} catch (Exception e) {
+		    log.warn("Error releasing connection", e);
+		}
 	    }
 	}
     }

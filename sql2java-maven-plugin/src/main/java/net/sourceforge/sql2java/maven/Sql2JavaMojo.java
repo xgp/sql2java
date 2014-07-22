@@ -28,8 +28,7 @@ public class Sql2JavaMojo extends AbstractMojo
      */
     private File outputDirectory;
 
-    protected File getOutputDirectory()
-    {
+    protected File getOutputDirectory() {
         return outputDirectory;
     }
 
@@ -41,9 +40,20 @@ public class Sql2JavaMojo extends AbstractMojo
      */
     private File propertiesFile;
 
-    protected File getPropertiesFile()
-    {
+    protected File getPropertiesFile() {
         return propertiesFile;
+    }
+
+    /**
+     * Should we use the runtime lib or generate the base classes and interfaces 
+     *
+     * @parameter default-value="false"
+     * @required
+     */
+    private boolean useLib;
+
+    protected boolean getUseLib() {
+        return useLib;
     }
 
     public void execute() throws MojoExecutionException {
@@ -88,6 +98,7 @@ public class Sql2JavaMojo extends AbstractMojo
 	    
             CodeWriter writer = new CodeWriter(db, prop);
             // override destdir if given
+	    if (useLib) writer.setUseLibrary("net.sourceforge.sql2java.lib");
 	    writer.setDestinationFolder(outputDirectory.getPath());
             writer.process();
         } catch(Exception e) {
