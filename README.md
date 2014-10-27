@@ -1,6 +1,6 @@
 # sql2java #
 
-This is a fork of an abandoned project on SourceForge by the same name <http://sql2java.sourceforge.net/>. It is heavily modified from the original version. I started using this around 2005 as a quick & dirty way to generate Java beans and data access managers from a SQL database. I still use it, as I have found many ORM tools like Hibernate to be unweildy and more trouble than they're worth. Other things that look interesting to me these days are JDBI <http://jdbi.org/> which puts nice Java idioms on top of SQL and JDBC, ActiveJDBC <https://code.google.com/p/activejdbc/> which walks a nice line between JDBC and the active record pattern, and Ebean <http://www.avaje.org/> which is an ORM, but feels right.
+This is a fork of an abandoned project on SourceForge by the same name <http://sql2java.sourceforge.net/>. It is heavily modified from the original version. I started using this around 2005 as a quick & dirty way to generate Java beans and data access managers from a SQL database. I still use it, as I have found many ORM tools like Hibernate to be unweildy and more trouble than they're worth. 
 
 This differs from the original project in the following ways:
 - Build uses Maven. Packaged as a Maven plugin.
@@ -62,5 +62,3 @@ Runtime dependencies for the generated code are slf4j <http://www.slf4j.org> for
 
 ### Feedback: ###
 Please submit a pull request if you'd like to see something changed. 
-
-Does anyone else use this? Let me know if you are a user (of this or some sql2java variant). The occasion of meeting users of old/obscure projects that I use has been known to produce free beer in San Francisco.
