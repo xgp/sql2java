@@ -7,16 +7,20 @@ package $pkg;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+#if ($useLib)
+import $libPath.*;
+#end
 
 /**
- * ${className}Database is a mapping of the $schema schema.
+ * ${strUtil.convertName($db.schema)}Database is a mapping of the $db.schema schema.
  */
-public class ${className}Database {
+public class ${strUtil.convertName($db.schema)}Database extends Database {
 
     public ${className}Database(DataSource dataSource) {
-        this.dataSource = dataSource;
+        super(dataSource);
 #foreach ( $table in $tables )
         this.$strUtil.getManagerObjectName($table) = new $strUtil.getManagerClass($table)(dataSource);
+	registerManager(this.$strUtil.getManagerObjectName($table));
 #end
     }
 

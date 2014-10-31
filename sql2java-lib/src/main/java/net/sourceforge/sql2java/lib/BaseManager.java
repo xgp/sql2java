@@ -139,7 +139,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
         if (log.isTraceEnabled()) log.trace("loadByWhere: {}", sql);
         try {
             c = getConnection();
-            st = c.createStatement();
+            st = c.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
             rs = st.executeQuery(sql.toString());
             return decodeResultSet(rs, startRow, numRows);
         } finally {
@@ -444,7 +444,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
         try {
             int iReturn = -1;
             c = getConnection();
-            st = c.createStatement();
+            st = c.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
             rs =  st.executeQuery(sql.toString());
             if (rs.next()) {
                 iReturn = rs.getInt("MCOUNT");

@@ -133,7 +133,12 @@ public class Database
                 Table table = new Table();
                 table.setDatabase(this);
                 table.setCatalog(resultSet.getString("TABLE_CAT"));
-                table.setSchema(resultSet.getString("TABLE_SCHEM"));
+
+		String sch = resultSet.getString("TABLE_SCHEM");
+		System.out.println(sch);
+		//                table.setSchema(resultSet.getString("TABLE_SCHEM"));
+		table.setSchema(sch);
+		
                 table.setName(resultSet.getString("TABLE_NAME"));
                 table.setType(resultSet.getString("TABLE_TYPE"));
                 table.setRemarks(resultSet.getString("REMARKS"));

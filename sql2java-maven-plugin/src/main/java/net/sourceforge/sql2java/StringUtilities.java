@@ -363,8 +363,8 @@ public final class StringUtilities {
      */
     public static String convertName(String name, boolean wimpyCaps) {
         StringBuffer buffer = new StringBuffer(name.length());
-        //char list[] = name.toLowerCase().toCharArray();
-        char list[] = name.toCharArray();
+        char list[] = name.toLowerCase().toCharArray();
+        //char list[] = name.toCharArray();
         for(int i = 0; i < list.length; i++) {
             if(i == 0 && !wimpyCaps) {
                 buffer.append(Character.toUpperCase(list[i]));

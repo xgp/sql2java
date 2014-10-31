@@ -224,15 +224,17 @@ public class CodeWriter
 	vc.put("useLib", useLibrary);
 	vc.put("libPath", libraryPackage);
         vc.put("strUtil", StringUtilities.getInstance());
+	vc.put("db", db);
+	
         current_vc = new VelocityContext(vc);
 
         System.out.println("Generation in folder " + destDir + " ...");
         String[] schema_templates = getPropertyExploded("mgrwriter.templates.perschema");
-	if (!useLibrary) {
-	    for(int i=0; i<schema_templates.length; i++) {
-		writeComponent(schema_templates[i]);
-	    }
+	//if (!useLibrary) {
+	for(int i=0; i<schema_templates.length; i++) {
+	    writeComponent(schema_templates[i]);
 	}
+	//}
         if ("true".equalsIgnoreCase(props.getProperty("write.only.per.schema.templates")))
             return;
 

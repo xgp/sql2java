@@ -8,6 +8,7 @@ This differs from the original project in the following ways:
 - *Managers return Lists instead of arrays.
 - Manager class is gone. BaseManager now takes a DataSource directly.
 - Generates a (SchemaName)Database.java factory with get*Manager() methods for all managers. Intended as an easy entry point to extend as your application's DAO.
+- Management of transactions from the (SchemaName)Database.java class.
 - Uses generics to make the code more concise (and requires Java 1.5)
 - Not sure if anything but MySQL and HSQL support works anymore. PostgreSQL did work a while ago, but haven't checked in a bit.
 
@@ -16,7 +17,6 @@ To do in the future:
 - Add an interface for a cache providing a few convenience methods on top of a *Manager: T get(Id), List<T> get(List<Id>), List<T> get(Key)
 - Provide a optional runtime library with cache implementations. 
 - The CodeWriter and Database classes are messy and fragile. Port to use SchemaCrawler <http://schemacrawler.sourceforge.net/>
-- Transactions?
 - Do something with foreign key mappings that is sane against bad definitions?
 - Move the properties defined in the file into the Maven plugin definition. Allow a list of tables to be specified for generation.
 
