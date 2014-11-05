@@ -1,31 +1,28 @@
 package net.sourceforge.sql2java.maven;
 
-import net.sourceforge.sql2java.*;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import net.sourceforge.sql2java.*;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Goal which uses a sql2java to generate Java files from a SQL database.
- * @goal sql2java
- * @requiresDirectInvocation true
+ * Goal which uses sql2java to generate Java files from a SQL database.
  * @author garth
  */
-public class Sql2JavaMojo extends AbstractMojo
-{
+@Mojo(name="sql2java", requiresDirectInvocation=true)
+public class Sql2JavaMojo extends AbstractDbMojo {
 
     /**
      * The working directory where the generated Java source files are created.
-     *
-     * @parameter default-value="${project.build.directory}/generated-sources/sql2java"
-     * @required
      */
+    @Parameter(property="outputDirectory", defaultValue="${project.build.directory}/generated-sources/sql2java", required=true)
     private File outputDirectory;
 
     protected File getOutputDirectory() {
@@ -34,10 +31,8 @@ public class Sql2JavaMojo extends AbstractMojo
 
     /**
      * The location of the properties file.
-     *
-     * @parameter default-value="${project.basedir}/src/main/resources/sql2java.properties"
-     * @required
      */
+    @Parameter(property="propertiesFile", defaultValue="${project.basedir}/src/main/resources/sql2java.properties", required=true)
     private File propertiesFile;
 
     protected File getPropertiesFile() {
@@ -45,16 +40,22 @@ public class Sql2JavaMojo extends AbstractMojo
     }
 
     /**
-     * Should we use the runtime lib or generate the base classes and interfaces 
-     *
-     * @parameter default-value="false"
-     * @required
+     * Database schema alias
      */
-    private boolean useLib;
+    @Parameter(property="schemaAlias", defaultValue="test")
+    private String schemaAlias;
 
-    protected boolean getUseLib() {
-        return useLib;
-    }
+    /**
+     * Package name
+     */
+    @Parameter(property="packageName", required=true)
+    private String packageName;
+
+    /**
+     * Class prefix
+     */
+    @Parameter(property="classPrefix", required=false)
+    private String classPrefix;
 
     public void execute() throws MojoExecutionException {
         File f = outputDirectory;
@@ -68,17 +69,19 @@ public class Sql2JavaMojo extends AbstractMojo
 
         //properties already here ?
         Properties prop = new Properties();
+	CodeWriter writer = null;
         try {
             prop.load(new FileInputStream(propertiesFile));
             Database db = new Database();
-            db.setDriver(getProperty(prop, "jdbc.driver"));
-            db.setUrl(getProperty(prop, "jdbc.url"));
-            db.setUsername(getProperty(prop, "jdbc.username"));
-            db.setPassword(getProperty(prop, "jdbc.password"));
-            db.setCatalog(getProperty(prop, "jdbc.catalog"));
-            db.setSchema(getProperty(prop, "jdbc.schema"));
+            db.setDriver(driver);
+            db.setUrl(url);
+            db.setUsername(user);
+	    db.setPassword(password);
+            db.setCatalog(catalog);
+            db.setSchema(schema);
+	    //db.setSchemaAlias(schemaAlias);
             db.setTableNamePattern(getProperty(prop, "jdbc.tablenamepattern"));
-	    
+
             if ("false".equalsIgnoreCase(getProperty(prop, "jdbc.oracle.retrieve.remarks")))
                 db.setOracleRetrieveRemarks(false);
             else
@@ -96,14 +99,21 @@ public class Sql2JavaMojo extends AbstractMojo
 	    
             db.load();
 	    
-            CodeWriter writer = new CodeWriter(db, prop);
+	    //HACK
+	    if (packageName != null) prop.setProperty("mgrwriter.package", packageName);
+	    if (classPrefix != null) prop.setProperty("mgrwriter.classprefix", classPrefix);
+	    writer = new CodeWriter(db, prop);
             // override destdir if given
-	    if (useLib) writer.setUseLibrary("net.sourceforge.sql2java.lib");
+	    writer.setUseLibrary("net.sourceforge.sql2java.lib");
 	    writer.setDestinationFolder(outputDirectory.getPath());
             writer.process();
         } catch(Exception e) {
 	    throw new MojoExecutionException("Error executing plugin", e);
-        }
+        } finally {
+	    if (writer != null) {
+		writer.cleanup();
+	    }
+	}
 
     }
 

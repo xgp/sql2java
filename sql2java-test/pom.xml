@@ -54,17 +54,65 @@
 	<version>1.0-SNAPSHOT</version>
 	<executions>
           <execution>
+            <id>sqlfile</id>
+	    <phase>initialize</phase>
+            <goals>
+              <goal>sqlfile</goal>
+            </goals>
+          </execution>
+	</executions>
+	<configuration>
+	  <deleteData>true</deleteData>
+          <scriptDirectory>${project.basedir}/src/main/sql</scriptDirectory>
+	  <driver>org.hsqldb.jdbc.JDBCDriver</driver>
+	  <url>jdbc:hsqldb:file:${project.build.directory}/databases/test</url>
+	  <user>SA</user>
+	  <password></password>
+	  <schema>PUBLIC</schema>
+	</configuration>
+      </plugin>
+      <plugin>
+	<groupId>net.sourceforge</groupId>
+	<artifactId>sql2java-maven-plugin</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<executions>
+          <execution>
             <id>sql2java</id>
+	    <phase>generate-sources</phase>
             <goals>
               <goal>sql2java</goal>
             </goals>
           </execution>
 	</executions>
 	<configuration>
-          <outputDirectory>${project.basedir}/src/main/java</outputDirectory> <!-- Where you want the generated sources to go -->
-          <propertiesFile>${project.basedir}/src/main/resources/sql2java.properties</propertiesFile> <!-- The location of the properties file -->
-	  <useLib>true</useLib>
+	  <outputDirectory>${project.build.directory}/generated-sources/sql2java</outputDirectory>
+	  <propertiesFile>${project.basedir}/src/main/resources/sql2java.properties</propertiesFile>
+	  <driver>org.hsqldb.jdbc.JDBCDriver</driver>
+	  <url>jdbc:hsqldb:file:${project.build.directory}/databases/test</url>
+	  <user>SA</user>
+	  <password></password>
+	  <schema>PUBLIC</schema>
+	  <packageName>com.test</packageName>
 	</configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.9.1</version>
+        <executions>
+	  <execution>
+	    <id>add-source</id>
+	    <phase>generate-sources</phase>
+	    <goals>
+	      <goal>add-source</goal>
+	    </goals>
+	    <configuration>
+	      <sources>
+	        <source>${project.build.directory}/generated-sources/sql2java</source>
+	      </sources>
+	    </configuration>
+	  </execution>
+	</executions>
       </plugin>
     </plugins>
   </build>

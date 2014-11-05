@@ -64,7 +64,6 @@ public class CodeWriter
             // Set properties
             basePackage = props.getProperty("mgrwriter.package");
             classPrefix = props.getProperty("mgrwriter.classprefix");
-            setDestinationFolder(props.getProperty("mgrwriter.destdir"));
 
             excludeHash = setHash(props.getProperty("mgrwriter.exclude"));
             if (excludeHash.size() != 0)
@@ -191,6 +190,11 @@ public class CodeWriter
         System.out.println("    Passed.");
     }
 
+    public void cleanup() {
+	if (db != null) db.cleanup();
+	// velocity?
+    }
+    
     ///////////////////////////////////////////////////////
     // CODE WRITER CORE
     ///////////////////////////////////////////////////////
