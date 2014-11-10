@@ -2,13 +2,13 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>net.sourceforge</groupId>
+  <groupId>net.sourceforge.sql2java</groupId>
   <artifactId>sql2java-test</artifactId>
   <packaging>jar</packaging>
   <name>sql2java-test</name>
 
   <parent>
-    <groupId>net.sourceforge</groupId>
+    <groupId>net.sourceforge.sql2java</groupId>
     <artifactId>sql2java</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
@@ -27,7 +27,7 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>net.sourceforge</groupId>
+      <groupId>net.sourceforge.sql2java</groupId>
       <artifactId>sql2java-lib</artifactId>
       <version>1.0-SNAPSHOT</version>
       <scope>compile</scope>
@@ -49,7 +49,7 @@
   <build>
     <plugins>
       <plugin>
-	<groupId>net.sourceforge</groupId>
+	<groupId>net.sourceforge.sql2java</groupId>
 	<artifactId>sql2java-maven-plugin</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<executions>
@@ -72,7 +72,7 @@
 	</configuration>
       </plugin>
       <plugin>
-	<groupId>net.sourceforge</groupId>
+	<groupId>net.sourceforge.sql2java</groupId>
 	<artifactId>sql2java-maven-plugin</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<executions>
