@@ -7,10 +7,45 @@
   <packaging>pom</packaging>
   <version>1.0-SNAPSHOT</version>
   <name>sql2java</name>
+  <description>sql2java code generator</description>
+  <url>https://github.com/xgp/sql2java</url>
 
+  <scm>
+    <url>https://github.com/xgp/sql2java</url>
+    <connection>scm:git:git://github.com/xgp/sql2java.git</connection>
+    <developerConnection>scm:git:git@github.com:xgp/sql2java.git</developerConnection>
+    <tag>master</tag>
+  </scm>
+  
   <prerequisites>
-    <maven>2.2.1</maven>
+    <maven>3.0.3</maven>
   </prerequisites>
+  
+  <licenses>
+    <license>
+      <name>GNU Library General Public License version 2.0 (LGPLv2)</name>
+      <url>https://www.gnu.org/licenses/lgpl-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Garth</name>
+    </developer>
+  </developers>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype OSS Snapshots Repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Sonatype OSS Release Staging Repository</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+    </repository>
+  </distributionManagement>
 
   <modules>
     <module>sql2java-lib</module>
@@ -37,8 +72,70 @@
           <target>1.5</target>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.4.2</version>
+        <dependencies>
+	  <!-- These can be removed once these versions are integrated into the 
+	  maven-release-plugin. Currently, they are required if you are using
+	  git 1.8+ per the bugs here:
+	  http://jira.codehaus.org/browse/MRELEASE-812
+	  http://jira.codehaus.org/browse/SCM-686
+	  -->
+          <dependency>
+            <groupId>org.apache.maven.scm</groupId>
+            <artifactId>maven-scm-api</artifactId>
+            <version>1.8.1</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.maven.scm</groupId>
+            <artifactId>maven-scm-provider-gitexe</artifactId>
+            <version>1.8.1</version>
+          </dependency>
+	  <dependency>
+	    <groupId>org.apache.maven.scm</groupId>
+	    <artifactId>maven-scm-provider-git-commons</artifactId>
+	    <version>1.8.1</version>
+	  </dependency>
+	</dependencies>
+        <configuration>
+          <tagNameFormat>version-@{project.version}</tagNameFormat>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <!-- only sign artificats during release; not snapshots -->
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.4</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <dependencies>
     <dependency>
@@ -51,6 +148,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <junit.version>[4.0,)</junit.version>
     <slf4j.version>[1.5.0,)</slf4j.version>
   </properties>
