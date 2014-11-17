@@ -170,7 +170,7 @@ public class Column implements Cloneable {
         case M_BIGDECIMAL: return "java.math.BigDecimal";
         case M_BOOLEAN: return "Boolean";
         case M_BYTES: return "byte[]";
-        case M_CLOB: return "Clob";
+        case M_CLOB: return "String";
         case M_SQLDATE: return "java.sql.Date";
         case M_UTILDATE: return "java.util.Date";
         case M_DOUBLE: return "Double";
@@ -368,7 +368,8 @@ public class Column implements Cloneable {
         case M_BLOB : return resultSet + ".getBlob("+pos+")";
         case M_BOOLEAN :  return "getBoolean(" + resultSet +  ", "+pos+")";
         case M_STRING : return resultSet + ".getString(" + pos + ")";
-        case M_CLOB : return resultSet + ".getClob("+pos+")";
+	    //case M_CLOB : return resultSet + ".getClob("+pos+")";
+        case M_CLOB : return "getStringFromClob(" + resultSet + ", "+pos+")";
         case M_URL : return resultSet + ".getURL("+pos+")";
         case M_BIGDECIMAL : return resultSet + ".getBigDecimal(" + pos + ")";
         case M_DOUBLE : return "getDouble(" + resultSet + ", "+pos+")";
@@ -424,7 +425,8 @@ public class Column implements Cloneable {
         case M_BLOB : return "ps.setBlob(" + pos + ", " + var + ");";
         case M_BOOLEAN : return "setBoolean(ps, "+pos+", "+var+");";
         case M_STRING:return "ps.setString(" + pos + ", " + var + ");";
-        case M_CLOB : return "ps.setClob(" + pos + ", " + var + ");";
+	    //case M_CLOB : return "ps.setClob(" + pos + ", " + var + ");";
+        case M_CLOB : return "setClob(ps, " + pos + ", " + var + ");";
         case M_URL : return "ps.setURL(" + pos + ", " + var + ");";
         case M_BIGDECIMAL: return "ps.setBigDecimal(" + pos + ", "  + var + ");";
         case M_DOUBLE:  return "setDouble(ps, "+pos+", "+var+");";

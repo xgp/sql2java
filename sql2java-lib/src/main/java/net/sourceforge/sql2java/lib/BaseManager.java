@@ -1,6 +1,10 @@
 package net.sourceforge.sql2java.lib;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.math.BigDecimal;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -864,6 +868,47 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
 	else ps.setBoolean(pos, b.booleanValue());
     }
 
+    /**
+     * Retrieves a clob value from the passed result set as a String object.
+     */
+    protected String getStringFromClob(ResultSet rs, int pos) throws SQLException {
+	return getStringFromClob(rs, getFieldNames()[pos]);
+    }
+    
+    /**
+     * Retrieves a clob value from the passed result set as a String object.
+     */
+    public static String getStringFromClob(ResultSet rs, String column) throws SQLException {
+	Clob c = rs.getClob(column);
+	StringBuilder sb = new StringBuilder();
+	BufferedReader br = null;
+	try {
+	    br = new BufferedReader(c.getCharacterStream());
+	    int b;
+	    while (-1 != (b = br.read())) {
+		sb.append((char)b);
+	    }
+	    return sb.toString();
+	} catch (IOException e) {
+	    log.warn("Could not convert CLOB to String", e);
+	    throw new SQLException(e);
+	} finally {
+	    if (br != null) {
+		try {
+		    br.close();
+		} catch (Exception ignore) {}
+	    }
+	}
+    }
+
+    /**
+     * Set a String object to the passed prepared statement as a clob or as null.
+     */
+    public static void setClob(PreparedStatement ps, int pos, String s) throws SQLException {
+	if (s == null) ps.setNull(pos, Types.CLOB);
+	else ps.setClob(pos, new StringReader(s), s.length());
+    }
+    
     ////////////////////////////////////////////////////
     // Date helper methods
     ////////////////////////////////////////////////////

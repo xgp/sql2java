@@ -5,7 +5,7 @@
   <groupId>com.github.xgp</groupId>
   <artifactId>sql2java</artifactId>
   <packaging>pom</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.9.0-SNAPSHOT</version>
   <name>sql2java</name>
   <description>sql2java code generator</description>
   <url>https://github.com/xgp/sql2java</url>
@@ -50,7 +50,6 @@
   <modules>
     <module>sql2java-lib</module>
     <module>sql2java-maven-plugin</module>
-    <module>sql2java-test</module>
   </modules>
 
   <build>
