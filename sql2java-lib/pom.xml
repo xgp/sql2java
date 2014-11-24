@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.github.xgp</groupId>
     <artifactId>sql2java</artifactId>
-    <version>0.9.0</version>
+    <version>0.9.1-SNAPSHOT</version>
   </parent>
 
   <dependencies>
