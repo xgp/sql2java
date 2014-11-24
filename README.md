@@ -18,7 +18,7 @@ To do in the future:
 - Add an interface for a cache providing a few convenience methods on top of a *Manager: T get(Id), List<T> get(List<Id>), List<T> get(Key). Add optional runtime library with cache implementations. 
 - The CodeWriter and Database classes are messy and fragile. Port to use SchemaCrawler <http://schemacrawler.sourceforge.net/>. Also look at jOOQ <http://www.jooq.org/> and see what they're doing.
 - Do something with foreign key mappings that is sane against bad definitions.
-- Do something better with compound primary keys.
+- Do something better with compound primary keys (despite thinking they're a bad design decision).
 - Move the properties defined in the file into the Maven plugin definition. Allow a list of tables to be specified for generation.
 
 ### Using: ###

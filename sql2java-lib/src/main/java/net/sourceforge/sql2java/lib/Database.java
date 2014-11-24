@@ -208,12 +208,13 @@ public abstract class Database {
     }
 
     // Transactions
+
     private static final ThreadLocal<Txn> transaction =
 	new ThreadLocal<Txn>() {
-	@Override protected Txn initialValue() {
-	    return null;
-	}
-    };
+	    @Override protected Txn initialValue() {
+		return null;
+	    }
+	};
 
     static public Txn beginTransaction() {
 	if (transaction.get() == null) {

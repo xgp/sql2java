@@ -8,8 +8,7 @@ import java.util.List;
 /**
  * Data access manager.
  */
-public interface DaoManager<T>
-{
+public interface DaoManager<T> {
     public T createBean();
     public String getTableName();
     public T loadByPrimaryKey(Integer id) throws SQLException;

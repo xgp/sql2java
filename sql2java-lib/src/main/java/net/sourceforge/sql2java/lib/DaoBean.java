@@ -5,8 +5,7 @@ import java.util.Map;
 /**
  * Base interface that is implemented by generated beans.
  */
-public interface DaoBean
-{
+public interface DaoBean {
     public boolean isNew();
     public boolean isModified();
     public void resetIsModified();

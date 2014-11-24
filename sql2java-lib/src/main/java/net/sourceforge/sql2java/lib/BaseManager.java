@@ -24,8 +24,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Base data access manager.
  */
-public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
-{
+public abstract class BaseManager<T extends DaoBean> implements DaoManager<T> {
     private static final Logger log = LoggerFactory.getLogger(BaseManager.class);
 
     /* set =QUERY for loadUsingTemplate */
@@ -346,12 +345,12 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @return the bean matching the template
      */
     public T loadUniqueUsingTemplate(T bean) throws SQLException {
-         List<T> beans = loadUsingTemplate(bean);
-         if (beans.size() == 0)
-             return null;
-         if (beans.size() > 1)
-             throw new SQLException("More than one element !!");
-         return beans.get(0);
+	List<T> beans = loadUsingTemplate(bean);
+	if (beans.size() == 0)
+	    return null;
+	if (beans.size() > 1)
+	    throw new SQLException("More than one element !!");
+	return beans.get(0);
     }
 
     /**
@@ -693,8 +692,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Releases the database connection.
      */
-    public void releaseConnection(Connection c)
-    {
+    public void releaseConnection(Connection c) {
 	if (c != null) {
 	    Txn transaction = Database.currentTransaction();
 	    if (transaction == null) {
@@ -710,8 +708,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Closes the passed Statement.
      */
-    public void close(Statement s)
-    {
+    public void close(Statement s) {
         try {
             if (s != null) s.close();
         } catch (SQLException x) {
@@ -722,8 +719,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Closes the passed ResultSet.
      */
-    public void close(ResultSet rs)
-    {
+    public void close(ResultSet rs) {
         try {
             if (rs != null) rs.close();
         } catch (SQLException x) {
@@ -734,8 +730,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
     /**
      * Closes the passed Statement and ResultSet.
      */
-    public void close(Statement s, ResultSet rs)
-    {
+    public void close(Statement s, ResultSet rs) {
         close(rs);
         close(s);
     }
@@ -872,7 +867,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * Retrieves a clob value from the passed result set as a String object.
      */
     protected String getStringFromClob(ResultSet rs, int pos) throws SQLException {
-	return getStringFromClob(rs, getFieldNames()[pos]);
+	return getStringFromClob(rs, getFieldNames()[pos-1]);
     }
     
     /**
@@ -917,170 +912,169 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * pattern for received date processing.
      */
     private static final String[] patterns = new String[]
-    {
-        "EEE, dd MMM yyyy HH:mm:ss '-'S '('z')'",
-        "EEE, dd MMM yyyy HH:mm:ss '+'S '('z')'",
-        "EEE, dd MMM yyyy HH:mm:ss '-'S",
-        "EEE, dd MMM yyyy HH:mm:ss '+'S",
-        "EEE, dd MMM yyyy HH:mm:ss z",
-        "EEE, dd MMM yyyy HH:mm:ss Z",
-        "EEE, dd MMM yyyy HH:mm:ss",
-        "EEE, d MMM yyyy HH:mm:ss '-'S '('z')'",
-        "EEE, d MMM yyyy HH:mm:ss '+'S '('z')'",
-        "EEE, d MMM yyyy HH:mm:ss '-'S",
-        "EEE, d MMM yyyy HH:mm:ss '+'S",
-        "EEE, d MMM yyyy HH:mm:ss z",
-        "EEE, d MMM yyyy HH:mm:ss Z",
-        "EEE, d MMM yyyy HH:mm:ss",
+	{
+	    "EEE, dd MMM yyyy HH:mm:ss '-'S '('z')'",
+	    "EEE, dd MMM yyyy HH:mm:ss '+'S '('z')'",
+	    "EEE, dd MMM yyyy HH:mm:ss '-'S",
+	    "EEE, dd MMM yyyy HH:mm:ss '+'S",
+	    "EEE, dd MMM yyyy HH:mm:ss z",
+	    "EEE, dd MMM yyyy HH:mm:ss Z",
+	    "EEE, dd MMM yyyy HH:mm:ss",
+	    "EEE, d MMM yyyy HH:mm:ss '-'S '('z')'",
+	    "EEE, d MMM yyyy HH:mm:ss '+'S '('z')'",
+	    "EEE, d MMM yyyy HH:mm:ss '-'S",
+	    "EEE, d MMM yyyy HH:mm:ss '+'S",
+	    "EEE, d MMM yyyy HH:mm:ss z",
+	    "EEE, d MMM yyyy HH:mm:ss Z",
+	    "EEE, d MMM yyyy HH:mm:ss",
 
-        "EEE, dd MMM yy HH:mm:ss '-'S '('z')'",
-        "EEE, dd MMM yy HH:mm:ss '+'S '('z')'",
-        "EEE, dd MMM yy HH:mm:ss '-'S",
-        "EEE, dd MMM yy HH:mm:ss '+'S",
-        "EEE, dd MMM yy HH:mm:ss z",
-        "EEE, dd MMM yy HH:mm:ss Z",
-        "EEE, dd MMM yy HH:mm:ss",
-        "EEE, d MMM yy HH:mm:ss '-'S '('z')'",
-        "EEE, d MMM yy HH:mm:ss '+'S '('z')'",
-        "EEE, d MMM yy HH:mm:ss '-'S",
-        "EEE, d MMM yy HH:mm:ss '+'S",
-        "EEE, d MMM yy HH:mm:ss z",
-        "EEE, d MMM yy HH:mm:ss Z",
-        "EEE, d MMM yy HH:mm:ss",
+	    "EEE, dd MMM yy HH:mm:ss '-'S '('z')'",
+	    "EEE, dd MMM yy HH:mm:ss '+'S '('z')'",
+	    "EEE, dd MMM yy HH:mm:ss '-'S",
+	    "EEE, dd MMM yy HH:mm:ss '+'S",
+	    "EEE, dd MMM yy HH:mm:ss z",
+	    "EEE, dd MMM yy HH:mm:ss Z",
+	    "EEE, dd MMM yy HH:mm:ss",
+	    "EEE, d MMM yy HH:mm:ss '-'S '('z')'",
+	    "EEE, d MMM yy HH:mm:ss '+'S '('z')'",
+	    "EEE, d MMM yy HH:mm:ss '-'S",
+	    "EEE, d MMM yy HH:mm:ss '+'S",
+	    "EEE, d MMM yy HH:mm:ss z",
+	    "EEE, d MMM yy HH:mm:ss Z",
+	    "EEE, d MMM yy HH:mm:ss",
 
-        "dd MMM yyyy HH:mm:ss '-'S",
-        "dd MMM yyyy HH:mm:ss '+'S",
-        "dd MMM yyyy HH:mm:ss '-'S '('z')'",
-        "dd MMM yyyy HH:mm:ss '+'S '('z')'",
-        "dd MMM yyyy HH:mm:ss z",
-        "dd MMM yyyy HH:mm:ss Z",
-        "dd MMM yyyy HH:mm:ss",
+	    "dd MMM yyyy HH:mm:ss '-'S",
+	    "dd MMM yyyy HH:mm:ss '+'S",
+	    "dd MMM yyyy HH:mm:ss '-'S '('z')'",
+	    "dd MMM yyyy HH:mm:ss '+'S '('z')'",
+	    "dd MMM yyyy HH:mm:ss z",
+	    "dd MMM yyyy HH:mm:ss Z",
+	    "dd MMM yyyy HH:mm:ss",
 
-        "dd MMM yyy HH:mm:ss '-'S",
-        "dd MMM yyy HH:mm:ss '+'S",
-        "dd MMM yyy HH:mm:ss '-'S '('z')'",
-        "dd MMM yyy HH:mm:ss '+'S '('z')'",
-        "dd MMM yyy HH:mm:ss z",
-        "dd MMM yyy HH:mm:ss Z",
-        "dd MMM yyy HH:mm:ss",
+	    "dd MMM yyy HH:mm:ss '-'S",
+	    "dd MMM yyy HH:mm:ss '+'S",
+	    "dd MMM yyy HH:mm:ss '-'S '('z')'",
+	    "dd MMM yyy HH:mm:ss '+'S '('z')'",
+	    "dd MMM yyy HH:mm:ss z",
+	    "dd MMM yyy HH:mm:ss Z",
+	    "dd MMM yyy HH:mm:ss",
 
-        "yyyy.MM.dd HH:mm:ss z",
-        "yyyy.MM.dd HH:mm:ss Z",
-        "yyyy.MM.d HH:mm:ss z",
-        "yyyy.MM.d HH:mm:ss Z",
-        "yyyy.MM.dd HH:mm:ss",
-        "yyyy.MM.d HH:mm:ss",
+	    "yyyy.MM.dd HH:mm:ss z",
+	    "yyyy.MM.dd HH:mm:ss Z",
+	    "yyyy.MM.d HH:mm:ss z",
+	    "yyyy.MM.d HH:mm:ss Z",
+	    "yyyy.MM.dd HH:mm:ss",
+	    "yyyy.MM.d HH:mm:ss",
 
-        "yy.MM.dd HH:mm:ss z",
-        "yy.MM.dd HH:mm:ss Z",
-        "yy.MM.d HH:mm:ss z",
-        "yy.MM.d HH:mm:ss Z",
-        "yy.MM.dd HH:mm:ss",
-        "yy.MM.d HH:mm:ss",
+	    "yy.MM.dd HH:mm:ss z",
+	    "yy.MM.dd HH:mm:ss Z",
+	    "yy.MM.d HH:mm:ss z",
+	    "yy.MM.d HH:mm:ss Z",
+	    "yy.MM.dd HH:mm:ss",
+	    "yy.MM.d HH:mm:ss",
 
-        "yyyy MM dd HH:mm:ss",
-        "yyyy MM d HH:mm:ss",
-        "yyyy MM dd HH:mm:ss z",
-        "yyyy MM dd HH:mm:ss Z",
-        "yyyy MM d HH:mm:ss z",
-        "yyyy MM d HH:mm:ss Z",
+	    "yyyy MM dd HH:mm:ss",
+	    "yyyy MM d HH:mm:ss",
+	    "yyyy MM dd HH:mm:ss z",
+	    "yyyy MM dd HH:mm:ss Z",
+	    "yyyy MM d HH:mm:ss z",
+	    "yyyy MM d HH:mm:ss Z",
 
-        "yy MM dd HH:mm:ss",
-        "yy MM d HH:mm:ss",
-        "yy MM dd HH:mm:ss z",
-        "yy MM dd HH:mm:ss Z",
-        "yy MM d HH:mm:ss z",
-        "yy MM d HH:mm:ss Z",
+	    "yy MM dd HH:mm:ss",
+	    "yy MM d HH:mm:ss",
+	    "yy MM dd HH:mm:ss z",
+	    "yy MM dd HH:mm:ss Z",
+	    "yy MM d HH:mm:ss z",
+	    "yy MM d HH:mm:ss Z",
 
-        "yyyy-MM-dd HH:mm:ss z",
-        "yyyy-MM-dd HH:mm:ss Z",
-        "yyyy-MM-d HH:mm:ss z",
-        "yyyy-MM-d HH:mm:ss Z",
-        "yyyy-MM-dd HH:mm:ss",
-        "yyyy-MM-d HH:mm:ss",
+	    "yyyy-MM-dd HH:mm:ss z",
+	    "yyyy-MM-dd HH:mm:ss Z",
+	    "yyyy-MM-d HH:mm:ss z",
+	    "yyyy-MM-d HH:mm:ss Z",
+	    "yyyy-MM-dd HH:mm:ss",
+	    "yyyy-MM-d HH:mm:ss",
 
-        "yy-MM-dd HH:mm:ss z",
-        "yy-MM-dd HH:mm:ss Z",
-        "yy-MM-d HH:mm:ss z",
-        "yy-MM-d HH:mm:ss Z",
-        "yy-MM-dd HH:mm:ss",
-        "yy-MM-d HH:mm:ss",
+	    "yy-MM-dd HH:mm:ss z",
+	    "yy-MM-dd HH:mm:ss Z",
+	    "yy-MM-d HH:mm:ss z",
+	    "yy-MM-d HH:mm:ss Z",
+	    "yy-MM-dd HH:mm:ss",
+	    "yy-MM-d HH:mm:ss",
 
-        "dd MMM yyyy",
-        "d MMM yyyy",
+	    "dd MMM yyyy",
+	    "d MMM yyyy",
 
-        "dd.MMM.yyyy",
-        "d.MMM.yyyy",
+	    "dd.MMM.yyyy",
+	    "d.MMM.yyyy",
 
-        "dd-MMM-yyyy",
-        "d-MMM-yyyy",
+	    "dd-MMM-yyyy",
+	    "d-MMM-yyyy",
 
-        "dd MM yyyy",
-        "d MM yyyy",
+	    "dd MM yyyy",
+	    "d MM yyyy",
 
-        "dd.MM.yyyy",
-        "d.MM.yyyy",
+	    "dd.MM.yyyy",
+	    "d.MM.yyyy",
 
-        "dd-MM-yyyy",
-        "d-MM-yyyy",
+	    "dd-MM-yyyy",
+	    "d-MM-yyyy",
 
-        "yyyy MM dd",
-        "yyyy MM d",
+	    "yyyy MM dd",
+	    "yyyy MM d",
 
-        "yyyy.MM.dd",
-        "yyyy.MM.d",
+	    "yyyy.MM.dd",
+	    "yyyy.MM.d",
 
-        "yyyy-MM-dd",
-        "yyyy-MM-d",
+	    "yyyy-MM-dd",
+	    "yyyy-MM-d",
 
-        "dd MMM yy",
-        "d MMM yy",
+	    "dd MMM yy",
+	    "d MMM yy",
 
-        "dd.MMM.yy",
-        "d.MMM.yy",
+	    "dd.MMM.yy",
+	    "d.MMM.yy",
 
-        "dd-MMM-yy",
-        "d-MMM-yy",
+	    "dd-MMM-yy",
+	    "d-MMM-yy",
 
-        "dd MM yy",
-        "d MM yy",
+	    "dd MM yy",
+	    "d MM yy",
 
-        "dd.MM.yy",
-        "d.MM.yy",
+	    "dd.MM.yy",
+	    "d.MM.yy",
 
-        "dd-MM-yy",
-        "d-MM-yy",
+	    "dd-MM-yy",
+	    "d-MM-yy",
 
-        "yy MMM dd",
-        "yy MMM d",
+	    "yy MMM dd",
+	    "yy MMM d",
 
-        "yy.MMM.dd",
-        "yy.MMM.d",
+	    "yy.MMM.dd",
+	    "yy.MMM.d",
 
-        "yy-MMM-dd",
-        "yy-MMM-d",
+	    "yy-MMM-dd",
+	    "yy-MMM-d",
 
-        "yy MMM dd",
-        "yy MMM d",
+	    "yy MMM dd",
+	    "yy MMM d",
 
-        "yy.MMM.dd",
-        "yy.MMM.d",
+	    "yy.MMM.dd",
+	    "yy.MMM.d",
 
-        "yy-MMM-dd",
-        "yy-MMM-d",
+	    "yy-MMM-dd",
+	    "yy-MMM-d",
 
-        "EEE dd, MMM yyyy", // ex: Wed 19, Feb 2003
+	    "EEE dd, MMM yyyy", // ex: Wed 19, Feb 2003
 
-        "EEE dd, MMM yy" // ex: Wed 19, Feb 03
-    };
+	    "EEE dd, MMM yy" // ex: Wed 19, Feb 03
+	};
 
     /**
      * get a date from a date string representation in one of the registered formats
      * @param strDate the date as string. If (null or empty) or correct pattern was not found
      * @return Date object
      */
-    static public java.util.Date getDateFromString(String strDate)
-    {
+    static public java.util.Date getDateFromString(String strDate) {
         if (strDate != null) strDate = strDate.trim();
 
         SimpleDateFormat pSimpleDateFormat = new SimpleDateFormat("");
@@ -1106,8 +1100,7 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
      * @param strDate the date as string.
      * @return boolean "true" if the string represantes the date in one of the registed formats.
      */
-    static public boolean isDate(String strDate)
-    {
+    static public boolean isDate(String strDate) {
         if (strDate != null) strDate = strDate.trim();
         SimpleDateFormat pSimpleDateFormat = new SimpleDateFormat("");
         if (strDate != null && "".equals(strDate) == false) {
@@ -1124,4 +1117,5 @@ public abstract class BaseManager<T extends DaoBean> implements DaoManager<T>
         }
         return false;
     }
+    
 }

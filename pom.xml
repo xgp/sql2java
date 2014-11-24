@@ -74,33 +74,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.4.2</version>
-        <dependencies>
-	  <!-- These can be removed once these versions are integrated into the 
-	  maven-release-plugin. Currently, they are required if you are using
-	  git 1.8+ per the bugs here:
-	  http://jira.codehaus.org/browse/MRELEASE-812
-	  http://jira.codehaus.org/browse/SCM-686
-	  -->
-          <dependency>
-            <groupId>org.apache.maven.scm</groupId>
-            <artifactId>maven-scm-api</artifactId>
-            <version>1.8.1</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.maven.scm</groupId>
-            <artifactId>maven-scm-provider-gitexe</artifactId>
-            <version>1.8.1</version>
-          </dependency>
-	  <dependency>
-	    <groupId>org.apache.maven.scm</groupId>
-	    <artifactId>maven-scm-provider-git-commons</artifactId>
-	    <version>1.8.1</version>
-	  </dependency>
-	</dependencies>
-        <configuration>
-          <tagNameFormat>version-@{project.version}</tagNameFormat>
-        </configuration>
+        <version>2.5.1</version>
       </plugin>
     </plugins>
   </build>
