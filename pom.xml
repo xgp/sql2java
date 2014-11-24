@@ -4,7 +4,7 @@
   <groupId>com.github.xgp</groupId>
   <artifactId>sql2java</artifactId>
   <packaging>pom</packaging>
-  <version>0.9.0</version>
+  <version>0.9.1-SNAPSHOT</version>
   <name>sql2java</name>
   <description>sql2java code generator</description>
   <url>https://github.com/xgp/sql2java</url>
@@ -13,7 +13,7 @@
     <url>https://github.com/xgp/sql2java</url>
     <connection>scm:git:git://github.com/xgp/sql2java.git</connection>
     <developerConnection>scm:git:git@github.com:xgp/sql2java.git</developerConnection>
-    <tag>sql2java-0.9.0</tag>
+    <tag>master</tag>
   </scm>
   
   <prerequisites>
