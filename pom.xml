@@ -18,7 +18,7 @@
   </scm>
   
   <prerequisites>
-    <maven>3.0.3</maven>
+    <maven>3.0.4</maven>
   </prerequisites>
   
   <licenses>
@@ -104,7 +104,10 @@
                 </goals>
               </execution>
             </executions>
-          </plugin>
+	    <configuration>
+              <useAgent>true</useAgent>
+	    </configuration>
+	  </plugin>
         </plugins>
       </build>
     </profile>
