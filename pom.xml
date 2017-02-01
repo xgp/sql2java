@@ -9,16 +9,26 @@
   <description>sql2java code generator</description>
   <url>https://github.com/xgp/sql2java</url>
 
+  <parent>
+    <groupId>com.github.xgp</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>0.1</version>
+  </parent>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>1.5</java.version>
+    <hsqldb.version>2.3.4</hsqldb.version>
+    <slf4j.version>1.7.22</slf4j.version>
+  </properties>
+
   <scm>
     <url>https://github.com/xgp/sql2java</url>
     <connection>scm:git:git://github.com/xgp/sql2java.git</connection>
     <developerConnection>scm:git:git@github.com:xgp/sql2java.git</developerConnection>
     <tag>master</tag>
   </scm>
-  
-  <prerequisites>
-    <maven>3.0.4</maven>
-  </prerequisites>
   
   <licenses>
     <license>
@@ -30,102 +40,43 @@
   <developers>
     <developer>
       <name>Garth</name>
+      <url>https://github.com/xgp</url>
     </developer>
   </developers>
-
-  <distributionManagement>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype OSS Snapshots Repository</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-    <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Sonatype OSS Release Staging Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-    </repository>
-  </distributionManagement>
 
   <modules>
     <module>sql2java-lib</module>
     <module>sql2java-maven-plugin</module>
   </modules>
 
-  <build>
-    <defaultGoal>install</defaultGoal>
-    <extensions>
-      <extension>
-	<groupId>org.apache.maven.wagon</groupId>
-	<artifactId>wagon-webdav</artifactId>
-	<version>1.0-beta-2</version>
-      </extension>
-    </extensions>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-	<version>2.5.1</version>
-        <configuration>
-          <debug>true</debug>
-          <source>1.5</source>
-          <target>1.5</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.1</version>
-      </plugin>
-    </plugins>
-  </build>
-
-  <profiles>
-    <profile>
-      <!-- only sign artificats during release; not snapshots -->
-      <id>release-sign-artifacts</id>
-      <activation>
-        <property>
-          <name>performRelease</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.4</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-	    <configuration>
-              <useAgent>true</useAgent>
-	    </configuration>
-	  </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <junit.version>[4.0,)</junit.version>
-    <slf4j.version>[1.5.0,)</slf4j.version>
-  </properties>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+	<groupId>org.slf4j</groupId>
+	<artifactId>slf4j-api</artifactId>
+	<version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+	<groupId>org.slf4j</groupId>
+	<artifactId>slf4j-simple</artifactId>
+	<version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+	<groupId>org.hsqldb</groupId>
+	<artifactId>hsqldb</artifactId>
+	<version>${hsqldb.version}</version>
+      </dependency>
+      <dependency>
+	<groupId>org.hsqldb</groupId>
+	<artifactId>sqltool</artifactId>
+	<version>${hsqldb.version}</version>
+      </dependency>
+      <dependency>
+	<groupId>junit</groupId>
+	<artifactId>junit</artifactId>
+	<version>4.12</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
 </project>
